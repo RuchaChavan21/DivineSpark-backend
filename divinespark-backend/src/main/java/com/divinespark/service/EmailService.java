@@ -1,7 +1,7 @@
 package com.divinespark.service;
 
 
-import com.divinespark.entity.OtpPurpose;
+import com.divinespark.entity.enums.OtpPurpose;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.mail.javamail.JavaMailSender;

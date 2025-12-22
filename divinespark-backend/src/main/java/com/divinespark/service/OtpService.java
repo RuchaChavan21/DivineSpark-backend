@@ -1,6 +1,6 @@
 package com.divinespark.service;
 
-import com.divinespark.entity.OtpPurpose;
+import com.divinespark.entity.enums.OtpPurpose;
 
 public interface OtpService {
 
