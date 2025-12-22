@@ -1,7 +1,7 @@
 package com.divinespark.repository;
 
 
-import com.divinespark.entity.OtpPurpose;
+import com.divinespark.entity.enums.OtpPurpose;
 import com.divinespark.entity.OtpVerification;
 import org.springframework.data.jpa.repository.JpaRepository;
 

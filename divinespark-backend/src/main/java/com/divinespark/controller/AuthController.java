@@ -4,7 +4,7 @@ package com.divinespark.controller;
 import com.divinespark.dto.AuthResponse;
 import com.divinespark.dto.LoginRequest;
 import com.divinespark.dto.RegisterRequest;
-import com.divinespark.entity.OtpPurpose;
+import com.divinespark.entity.enums.OtpPurpose;
 import com.divinespark.service.OtpService;
 import com.divinespark.utils.JwtUtil;
 import com.divinespark.service.AuthService;

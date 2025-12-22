@@ -2,10 +2,9 @@ package com.divinespark.service;
 
 
 
-import com.divinespark.entity.OtpPurpose;
+import com.divinespark.entity.enums.OtpPurpose;
 import com.divinespark.entity.OtpVerification;
 import com.divinespark.repository.OtpRepository;
-import com.divinespark.service.EmailService;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

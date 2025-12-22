@@ -1,5 +1,6 @@
 package com.divinespark.entity;
 
+import com.divinespark.entity.enums.OtpPurpose;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
