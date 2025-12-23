@@ -1,9 +1,7 @@
 package com.divinespark.controller;
 
 
-import com.divinespark.dto.AuthResponse;
-import com.divinespark.dto.LoginRequest;
-import com.divinespark.dto.RegisterRequest;
+import com.divinespark.dto.*;
 import com.divinespark.entity.enums.OtpPurpose;
 import com.divinespark.service.OtpService;
 import com.divinespark.utils.JwtUtil;
@@ -30,27 +28,32 @@ public class AuthController {
 
     @PostMapping("/request-otp")
     public ResponseEntity<?> requestOtp(
-            @RequestParam String email,
-            @RequestParam OtpPurpose purpose) {
+            @Valid @RequestBody RequestOtpRequest request) {
 
-        otpService.generateAndSendOtp(email, purpose);
+        otpService.generateAndSendOtp(
+                request.getEmail(),
+                request.getPurpose()
+        );
+
         return ResponseEntity.ok("OTP sent successfully");
     }
 
+
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyOtp(
-            @RequestParam String email,
-            @RequestParam String otp,
-            @RequestParam OtpPurpose purpose) {
+            @Valid @RequestBody VerifyOtpRequest request) {
 
-        otpService.verifyOtp(email, otp, purpose);
-
-        String token = jwtUtil.generateToken(email);
-
-        return ResponseEntity.ok(
-                Map.of("token", token)
+        otpService.verifyOtp(
+                request.getEmail(),
+                request.getOtp(),
+                request.getPurpose()
         );
+
+        String token = jwtUtil.generateToken(request.getEmail());
+
+        return ResponseEntity.ok(Map.of("token", token));
     }
+
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(
