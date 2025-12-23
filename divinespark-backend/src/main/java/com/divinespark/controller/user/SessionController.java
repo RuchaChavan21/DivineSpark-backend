@@ -1,10 +1,14 @@
 package com.divinespark.controller.user;
 
+import com.divinespark.dto.PaymentInitiateResponse;
 import com.divinespark.dto.SessionDetailResponse;
 import com.divinespark.dto.SessionUserListResponse;
+import com.divinespark.entity.User;
+import com.divinespark.repository.UserRepository;
 import com.divinespark.security.CustomUserDetails;
 import com.divinespark.service.SessionService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,9 +17,11 @@ import org.springframework.web.bind.annotation.*;
 public class SessionController {
 
     private final SessionService sessionService;
+    private final UserRepository userRepository;
 
-    public SessionController(SessionService sessionService) {
+    public SessionController(SessionService sessionService, UserRepository userRepository) {
         this.sessionService = sessionService;
+        this.userRepository = userRepository;
     }
 
     @GetMapping
@@ -45,6 +51,19 @@ public class SessionController {
     ) {
         sessionService.joinFreeSession(sessionId, userDetails.getId());
         return ResponseEntity.ok("Joined successfully");
+    }
+
+    @PostMapping("/{sessionId}/pay")
+    public ResponseEntity<PaymentInitiateResponse> initiatePayment(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal CustomUserDetails userDetails ) {
+
+        User user = userRepository.findById(userDetails.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return ResponseEntity.ok(
+                sessionService.initiatePaidSession(sessionId, user.getId())
+        );
     }
 
 
