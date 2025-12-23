@@ -3,10 +3,12 @@ package com.divinespark.service.impl;
 import com.divinespark.dto.*;
 
 import com.divinespark.entity.Booking;
+import com.divinespark.entity.Payment;
 import com.divinespark.entity.Session;
 import com.divinespark.entity.enums.SessionStatus;
 import com.divinespark.entity.enums.SessionType;
 import com.divinespark.repository.BookingRepository;
+import com.divinespark.repository.PaymentRepository;
 import com.divinespark.repository.SessionRepository;
 import com.divinespark.repository.UserRepository;
 import com.divinespark.service.EmailService;
@@ -19,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -28,17 +31,19 @@ public class SessionServiceImpl implements SessionService {
     private final BookingRepository bookingRepo;
     private final UserRepository userRepo;
     private final EmailService emailService;
+    private final PaymentRepository paymentRepository;
 
     public SessionServiceImpl(
             SessionRepository repo,
             BookingRepository bookingRepo,
             UserRepository userRepo,
-            EmailService emailService
-    ) {
+            EmailService emailService,
+            PaymentRepository paymentRepository) {
         this.repo = repo;
         this.bookingRepo = bookingRepo;
         this.userRepo = userRepo;
         this.emailService = emailService;
+        this.paymentRepository = paymentRepository;
     }
 
 
@@ -202,6 +207,54 @@ public class SessionServiceImpl implements SessionService {
         );
 
     }
+
+    @Override
+    @Transactional
+    public PaymentInitiateResponse initiatePaidSession(Long sessionId, Long userId) {
+        Session session = repo.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+
+        if(!session.getType().name().equals("PAID")) {
+            throw new RuntimeException("Free session does not require payment");
+        }
+
+        if(!session.getStatus().name().equals("UPCOMING")) {
+            throw new RuntimeException("Session not available");
+        }
+
+        if(session.getAvailableSeats() <= 0) {
+            throw new RuntimeException("No seats available");
+        }
+
+        if(bookingRepo.existsByUserIdAndSessionId(userId, sessionId)) {
+            throw new RuntimeException("Already booked, please check your email to join session");
+        }
+
+        Booking booking = new Booking();
+        booking.setSession(session);
+        booking.setUser(userRepo.findById(userId).orElseThrow());
+        booking.setStatus("PENDING");
+        bookingRepo.save(booking);
+
+        // Simulate payment gateway order creation
+        String fakeOrderId = "ORDER_" + System.currentTimeMillis();
+
+        Payment payment = new Payment();
+        payment.setBookingId(booking.getId());
+        payment.setAmount(session.getPrice());
+        payment.setStatus("CREATED");
+        payment.setGatewayOrderId(fakeOrderId);
+        paymentRepository.save(payment);
+
+        PaymentInitiateResponse response = new PaymentInitiateResponse();
+        response.setBookingId(booking.getId());
+        response.setOrderId(fakeOrderId);
+        response.setAmount(session.getPrice());
+        response.setCurrency("INR");
+
+        return response;
+    }
+
 
 
 }

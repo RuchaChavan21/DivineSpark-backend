@@ -1,9 +1,6 @@
 package com.divinespark.service;
 
-import com.divinespark.dto.SessionCreateRequest;
-import com.divinespark.dto.SessionDetailResponse;
-import com.divinespark.dto.SessionUpdateRequest;
-import com.divinespark.dto.SessionUserListResponse;
+import com.divinespark.dto.*;
 import com.divinespark.entity.Session;
 import org.springframework.data.domain.Page;
 
@@ -19,5 +16,11 @@ public interface SessionService {
     );
     SessionDetailResponse getSessionDetails(Long sessionId);
     void joinFreeSession(Long sessionId, Long userId);
+
+    PaymentInitiateResponse initiatePaidSession(
+            Long sessionId,
+            Long userId
+    );
+
 
 }
