@@ -1,4 +1,4 @@
-package com.divinespark.controller;
+package com.divinespark.controller.auth;
 
 
 import com.divinespark.dto.AuthResponse;
