@@ -1,9 +1,10 @@
 package com.divinespark.service;
 
-
 import com.divinespark.entity.enums.OtpPurpose;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -11,6 +12,9 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class EmailService {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(EmailService.class);
 
     private final JavaMailSender mailSender;
 
@@ -22,10 +26,13 @@ public class EmailService {
     public void sendOtpEmail(String email, String otp, OtpPurpose purpose) {
 
         try {
+            log.info("Sending OTP email to {}", email);
+
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper =
                     new MimeMessageHelper(message, true);
 
+            helper.setFrom("your-email@gmail.com"); // IMPORTANT
             helper.setTo(email);
             helper.setSubject("DivineSpark - OTP Verification");
 
@@ -42,9 +49,10 @@ public class EmailService {
 
             mailSender.send(message);
 
+            log.info("OTP email sent successfully to {}", email);
+
         } catch (MessagingException e) {
-            // In production → log this properly
-            e.printStackTrace();
+            log.error("Failed to send OTP email to {}", email, e);
         }
     }
 
@@ -59,10 +67,13 @@ public class EmailService {
     ) {
 
         try {
+            log.info("Sending free session email to {}", email);
+
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper =
                     new MimeMessageHelper(message, true);
 
+            helper.setFrom("your-email@gmail.com"); // MUST match SMTP user
             helper.setTo(email);
             helper.setSubject("DivineSpark - Free Session Access");
 
@@ -96,10 +107,10 @@ public class EmailService {
 
             mailSender.send(message);
 
+            log.info("Free session email sent successfully to {}", email);
+
         } catch (MessagingException e) {
-            // Production: log error (do not fail booking)
-            e.printStackTrace();
+            log.error("Failed to send free session email to {}", email, e);
         }
     }
-
 }
