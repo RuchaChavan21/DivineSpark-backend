@@ -36,7 +36,7 @@ public class UserController {
 
     @GetMapping("/{sessionId}")
     public ResponseEntity<SessionDetailResponse> getSessionDetails(
-            @PathVariable Long sessionId) {
+            @PathVariable("sessionId") Long sessionId) {
 
         return ResponseEntity.ok(
                 sessionService.getSessionDetails(sessionId)
@@ -45,7 +45,7 @@ public class UserController {
 
     @PostMapping("/{sessionId}/join")
     public ResponseEntity<?> joinFreeSession(
-            @PathVariable Long sessionId,
+            @PathVariable("sessionId") Long sessionId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         sessionService.joinFreeSession(sessionId, userDetails.getId());
@@ -54,8 +54,8 @@ public class UserController {
 
     @PostMapping("/{sessionId}/pay")
     public ResponseEntity<PaymentInitiateResponse> initiatePayment(
-            @PathVariable Long sessionId,
-            @AuthenticationPrincipal CustomUserDetails userDetails ) {
+            @PathVariable("sessionId") Long sessionId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         User user = userRepository.findById(userDetails.getId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -64,5 +64,4 @@ public class UserController {
                 sessionService.initiatePaidSession(sessionId, user.getId())
         );
     }
-
 }
