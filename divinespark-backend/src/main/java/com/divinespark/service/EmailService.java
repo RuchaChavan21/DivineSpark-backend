@@ -113,4 +113,5 @@ public class EmailService {
             log.error("Failed to send free session email to {}", email, e);
         }
     }
+
 }

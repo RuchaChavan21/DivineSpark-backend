@@ -8,18 +8,17 @@ import com.divinespark.repository.UserRepository;
 import com.divinespark.security.CustomUserDetails;
 import com.divinespark.service.SessionService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/sessions")
-public class SessionController {
+public class UserController {
 
     private final SessionService sessionService;
     private final UserRepository userRepository;
 
-    public SessionController(SessionService sessionService, UserRepository userRepository) {
+    public UserController(SessionService sessionService, UserRepository userRepository) {
         this.sessionService = sessionService;
         this.userRepository = userRepository;
     }
@@ -65,8 +64,5 @@ public class SessionController {
                 sessionService.initiatePaidSession(sessionId, user.getId())
         );
     }
-
-
-
 
 }
