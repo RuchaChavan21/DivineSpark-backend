@@ -11,6 +11,7 @@ import com.divinespark.repository.BookingRepository;
 import com.divinespark.repository.PaymentRepository;
 import com.divinespark.repository.SessionRepository;
 import com.divinespark.repository.UserRepository;
+import com.divinespark.service.BookingService;
 import com.divinespark.service.EmailService;
 import com.divinespark.service.SessionService;
 
@@ -28,10 +29,12 @@ import java.util.UUID;
 public class SessionServiceImpl implements SessionService {
 
     private final SessionRepository repo;
-    private final BookingRepository bookingRepo;
+    private final BookingRepository bookingRepository;
     private final UserRepository userRepo;
     private final EmailService emailService;
     private final PaymentRepository paymentRepository;
+
+
 
     public SessionServiceImpl(
             SessionRepository repo,
@@ -40,7 +43,7 @@ public class SessionServiceImpl implements SessionService {
             EmailService emailService,
             PaymentRepository paymentRepository) {
         this.repo = repo;
-        this.bookingRepo = bookingRepo;
+        this.bookingRepository = bookingRepo;
         this.userRepo = userRepo;
         this.emailService = emailService;
         this.paymentRepository = paymentRepository;
@@ -183,7 +186,7 @@ public class SessionServiceImpl implements SessionService {
             throw new RuntimeException("No seats available");
         }
 
-        if (bookingRepo.existsByUserIdAndSessionId(userId, sessionId)) {
+        if (bookingRepository.existsByUserIdAndSessionId(userId, sessionId)) {
             throw new RuntimeException("Already joined");
         }
 
@@ -195,7 +198,7 @@ public class SessionServiceImpl implements SessionService {
         booking.setUser(userRepo.findById(userId).orElseThrow());
         booking.setStatus("CONFIRMED");
 
-        bookingRepo.save(booking);
+        bookingRepository.save(booking);
 
         emailService.sendFreeSessionLink(
                 booking.getUser().getEmail(),
@@ -226,7 +229,7 @@ public class SessionServiceImpl implements SessionService {
             throw new RuntimeException("No seats available");
         }
 
-        if(bookingRepo.existsByUserIdAndSessionId(userId, sessionId)) {
+        if(bookingRepository.existsByUserIdAndSessionId(userId, sessionId)) {
             throw new RuntimeException("Already booked, please check your email to join session");
         }
 
@@ -234,7 +237,7 @@ public class SessionServiceImpl implements SessionService {
         booking.setSession(session);
         booking.setUser(userRepo.findById(userId).orElseThrow());
         booking.setStatus("PENDING");
-        bookingRepo.save(booking);
+        bookingRepository.save(booking);
 
         // Simulate payment gateway order creation
         String fakeOrderId = "ORDER_" + System.currentTimeMillis();
@@ -254,6 +257,40 @@ public class SessionServiceImpl implements SessionService {
 
         return response;
     }
+
+    @Override
+    public List<AdminSessionUserResponse> getUsersBySession(Long sessionId) {
+        return bookingRepository.findUsersBySessionId(sessionId);
+    }
+
+    @Override
+    public List<AdminSessionBookingResponse> getBookingsBySession(Long sessionId) {
+        return bookingRepository.findBookingsBySessionId(sessionId);
+    }
+
+    public void updateStatus(Long sessionId, String status) {
+
+        Session session = repo.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+
+        SessionStatus newStatus;
+        try {
+            newStatus = SessionStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid session status");
+        }
+
+        // Prevent invalid transitions
+        if (session.getStatus() == SessionStatus.COMPLETED ||
+                session.getStatus() == SessionStatus.CANCELLED) {
+            throw new RuntimeException("Session status cannot be changed");
+        }
+
+        session.setStatus(newStatus);
+    }
+
+
+
 
 
 
