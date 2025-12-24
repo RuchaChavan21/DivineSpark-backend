@@ -4,6 +4,8 @@ import com.divinespark.dto.*;
 import com.divinespark.entity.Session;
 import org.springframework.data.domain.Page;
 
+import java.util.List;
+
 public interface SessionService {
     Session create(SessionCreateRequest req);
     Session update(Long id, SessionUpdateRequest req);
@@ -21,6 +23,14 @@ public interface SessionService {
             Long sessionId,
             Long userId
     );
+
+    List<AdminSessionUserResponse> getUsersBySession(Long sessionId);
+
+    List<AdminSessionBookingResponse> getBookingsBySession(Long sessionId);
+
+    void updateStatus(Long sessionId, String status);
+
+
 
 
 }
