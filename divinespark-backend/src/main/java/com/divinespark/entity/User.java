@@ -12,6 +12,9 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
+    private String username;
+
     @Column(nullable = false, unique = true)
     private String email;
 
@@ -31,9 +34,15 @@ public class User {
     public User() {
     }
 
-    public User(Long id, String email, String password, Role role,
-                boolean isActive, LocalDateTime createdAt) {
+    public User(Long id,
+                String username,
+                String email,
+                String password,
+                Role role,
+                boolean isActive,
+                LocalDateTime createdAt) {
         this.id = id;
+        this.username = username;
         this.email = email;
         this.password = password;
         this.role = role;
@@ -41,9 +50,16 @@ public class User {
         this.createdAt = createdAt;
     }
 
-
     public Long getId() {
         return id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public void setId(Long id) {
@@ -77,6 +93,7 @@ public class User {
     public boolean isActive() {
         return isActive;
     }
+
     public void setActive(boolean active) {
         isActive = active;
     }
@@ -100,10 +117,16 @@ public class User {
 
     public static class UserBuilder {
 
+        private String username;
         private String email;
         private String password;
         private Role role;
         private boolean isActive = true;
+
+        public UserBuilder username(String username) {
+            this.username = username;
+            return this;
+        }
 
         public UserBuilder email(String email) {
             this.email = email;
@@ -127,6 +150,7 @@ public class User {
 
         public User build() {
             User user = new User();
+            user.setUsername(this.username);
             user.setEmail(this.email);
             user.setPassword(this.password);
             user.setRole(this.role);
@@ -134,5 +158,4 @@ public class User {
             return user;
         }
     }
-
 }
