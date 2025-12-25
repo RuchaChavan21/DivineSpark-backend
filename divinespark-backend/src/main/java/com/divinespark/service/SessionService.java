@@ -3,6 +3,7 @@ package com.divinespark.service;
 import com.divinespark.dto.*;
 import com.divinespark.entity.Session;
 import org.springframework.data.domain.Page;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -29,6 +30,9 @@ public interface SessionService {
     List<AdminSessionBookingResponse> getBookingsBySession(Long sessionId);
 
     void updateStatus(Long sessionId, String status);
+
+
+    void uploadResource(Long sessionId, String fileType, MultipartFile file);
 
 
 
