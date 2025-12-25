@@ -5,9 +5,11 @@ import com.divinespark.dto.*;
 import com.divinespark.entity.Session;
 import com.divinespark.service.SessionService;
 import org.springframework.data.domain.Page;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -89,6 +91,22 @@ public class AdminSessionController {
         sessionService.updateStatus(id, request.getStatus());
         return ResponseEntity.noContent().build(); // 204
     }
+
+    @PostMapping(
+            value = "/{id}/resources",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> uploadResource(
+            @PathVariable(value = "id", required = true) Long id,
+            @RequestParam("fileType") String fileType,
+            @RequestParam("file") MultipartFile file) {
+
+        sessionService.uploadResource(id, fileType, file);
+        return ResponseEntity.noContent().build();
+    }
+
+
 
 
 
