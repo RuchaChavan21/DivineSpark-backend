@@ -57,45 +57,47 @@ public class EmailService {
     }
 
     @Async
-    public void sendFreeSessionLink(
+    public void sendSessionJoinLink(
             String email,
             String sessionTitle,
             String zoomLink,
             String trainerName,
             String startTime,
-            String endTime
+            String endTime,
+            String sessionType // FREE / PAID
     ) {
 
         try {
-            log.info("Sending free session email to {}", email);
+            log.info("Sending session join email to {}", email);
 
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper =
                     new MimeMessageHelper(message, true);
 
-            helper.setFrom("your-email@gmail.com"); // MUST match SMTP user
+            helper.setFrom("your-email@gmail.com");
             helper.setTo(email);
-            helper.setSubject("DivineSpark - Free Session Access");
+            helper.setSubject("DivineSpark - Session Access");
 
             String body = """
-                <h2>🎉 You have successfully joined a FREE session!</h2>
-                <p><b>Session:</b> %s</p>
-                <p><b>Trainer:</b> %s</p>
-                <p><b>Start Time:</b> %s</p>
-                <p><b>End Time:</b> %s</p>
-                <br/>
-                <p><b>Zoom Link:</b></p>
-                <p>
-                    <a href="%s" target="_blank"
-                       style="font-size:16px;color:#2F80ED;">
-                       Join Session
-                    </a>
-                </p>
-                <br/>
-                <p>Please join the session 5 minutes early.</p>
-                <br/>
-                <p>Regards,<br/>DivineSpark Team</p>
-                """.formatted(
+            <h2>🎉 You have successfully joined a %s session!</h2>
+            <p><b>Session:</b> %s</p>
+            <p><b>Trainer:</b> %s</p>
+            <p><b>Start Time:</b> %s</p>
+            <p><b>End Time:</b> %s</p>
+            <br/>
+            <p><b>Your Unique Zoom Link:</b></p>
+            <p>
+                <a href="%s" target="_blank"
+                   style="font-size:16px;color:#2F80ED;">
+                   Join Session
+                </a>
+            </p>
+            <br/>
+            <p>This link is unique to you. Do not share it.</p>
+            <br/>
+            <p>Regards,<br/>DivineSpark Team</p>
+            """.formatted(
+                    sessionType,
                     sessionTitle,
                     trainerName,
                     startTime,
@@ -104,13 +106,12 @@ public class EmailService {
             );
 
             helper.setText(body, true);
-
             mailSender.send(message);
 
-            log.info("Free session email sent successfully to {}", email);
+            log.info("Session join email sent successfully to {}", email);
 
         } catch (MessagingException e) {
-            log.error("Failed to send free session email to {}", email, e);
+            log.error("Failed to send session join email to {}", email, e);
         }
     }
 
