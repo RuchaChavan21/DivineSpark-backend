@@ -20,6 +20,13 @@ public class Booking {
     @JoinColumn(name = "session_id", nullable = false)
     private Session session;
 
+    @Column(name = "zoom_registrant_id")
+    private String zoomRegistrantId;
+
+    @Column(name = "zoom_join_url", columnDefinition = "TEXT")
+    private String zoomJoinUrl;
+
+
     @Column(nullable = false)
     private String status; // CONFIRMED
 
@@ -38,4 +45,21 @@ public class Booking {
     public void setSession(Session session) { this.session = session; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getZoomRegistrantId() {
+        return zoomRegistrantId;
+    }
+
+    public void setZoomRegistrantId(String zoomRegistrantId) {
+        this.zoomRegistrantId = zoomRegistrantId;
+    }
+
+    public String getZoomJoinUrl() {
+        return zoomJoinUrl;
+    }
+
+    public void setZoomJoinUrl(String zoomJoinUrl) {
+        this.zoomJoinUrl = zoomJoinUrl;
+    }
+
 }

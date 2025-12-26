@@ -4,6 +4,7 @@ import com.divinespark.dto.*;
 import com.divinespark.entity.Booking;
 import com.divinespark.entity.Session;
 import com.divinespark.entity.SessionResource;
+import com.divinespark.entity.User;
 import com.divinespark.entity.enums.SessionStatus;
 import com.divinespark.entity.enums.SessionType;
 import com.divinespark.repository.*;
@@ -11,6 +12,8 @@ import com.divinespark.service.EmailService;
 import com.divinespark.service.SessionService;
 import com.divinespark.service.StorageService;
 
+import com.divinespark.service.ZoomService;
+import com.divinespark.utils.ZoomUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -31,6 +34,8 @@ public class SessionServiceImpl implements SessionService  {
     private final PaymentRepository paymentRepository;
     private final StorageService storageService;
     private final SessionResourceRepository sessionResourceRepository;
+    private final ZoomService zoomService;
+
 
     public SessionServiceImpl(
             SessionRepository repo,
@@ -39,7 +44,8 @@ public class SessionServiceImpl implements SessionService  {
             EmailService emailService,
             PaymentRepository paymentRepository,
             StorageService storageService,
-            SessionResourceRepository sessionResourceRepository) {
+            SessionResourceRepository sessionResourceRepository,
+            ZoomService zoomService) {
 
         this.repo = repo;
         this.bookingRepository = bookingRepository;
@@ -48,6 +54,7 @@ public class SessionServiceImpl implements SessionService  {
         this.paymentRepository = paymentRepository;
         this.storageService = storageService;
         this.sessionResourceRepository = sessionResourceRepository;
+        this.zoomService = zoomService;
     }
 
     // ================= ADMIN =================
@@ -65,6 +72,15 @@ public class SessionServiceImpl implements SessionService  {
         s.setEndTime(req.getEndTime());
         s.setMaxSeats(req.getMaxSeats());
         s.setGuideName(req.getGuideName());
+        if(s.getType() == SessionType.FREE){
+            s.setZoomMeetingId(
+                    ZoomUtils.extractMeetingId(req.getFreeZoomLink())
+            );
+        }else{
+            s.setZoomMeetingId(
+                    ZoomUtils.extractMeetingId(req.getPaidZoomLink())
+            );
+        }
         return repo.save(s);
     }
 
@@ -90,7 +106,6 @@ public class SessionServiceImpl implements SessionService  {
         return repo.save(s);
     }
 
-    // ✅ FIXED: Missing method
     @Override
     public void delete(Long id) {
         if (!repo.existsById(id)) {
@@ -124,41 +139,63 @@ public class SessionServiceImpl implements SessionService  {
     // ================= USER =================
 
     @Override
+    @Transactional
     public void joinFreeSession(Long sessionId, Long userId) {
 
         Session session = repo.findById(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
 
-        if (session.getType() != SessionType.FREE)
-            throw new RuntimeException("Paid session cannot be joined directly");
+        if (!session.getType().name().equals("FREE")) {
+            throw new RuntimeException("Paid session cannot be joined here");
+        }
 
-        if (session.getStatus() != SessionStatus.UPCOMING)
+        if (!session.getStatus().name().equals("UPCOMING")) {
             throw new RuntimeException("Session not available");
+        }
 
-        if (session.getAvailableSeats() <= 0)
+        if (session.getAvailableSeats() <= 0) {
             throw new RuntimeException("No seats available");
+        }
 
-        if (bookingRepository.existsByUserIdAndSessionId(userId, sessionId))
+        if (bookingRepository.existsByUserIdAndSessionId(userId, sessionId)) {
             throw new RuntimeException("Already joined");
+        }
 
-        session.setAvailableSeats(session.getAvailableSeats() - 1);
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         Booking booking = new Booking();
         booking.setSession(session);
-        booking.setUser(userRepo.findById(userId).orElseThrow());
+        booking.setUser(user);
         booking.setStatus("CONFIRMED");
-
         bookingRepository.save(booking);
 
-        emailService.sendFreeSessionLink(
-                booking.getUser().getEmail(),
+        ZoomRegistrationResponse zoomResponse =
+                zoomService.registerUser(
+                        session.getZoomMeetingId(),
+                        user.getEmail(),
+                        user.getUsername(),
+                        "User"
+                );
+
+        booking.setZoomRegistrantId(zoomResponse.getRegistrantId());
+        booking.setZoomJoinUrl(zoomResponse.getJoinUrl());
+        bookingRepository.save(booking);
+
+        session.setAvailableSeats(session.getAvailableSeats() - 1);
+
+        emailService.sendSessionJoinLink(
+                user.getEmail(),
                 session.getTitle(),
-                session.getFreeZoomLink(),
+                booking.getZoomJoinUrl(),
                 session.getGuideName(),
                 session.getStartTime().toString(),
-                session.getEndTime().toString()
+                session.getEndTime().toString(),
+                "FREE"
         );
+
     }
+
 
     @Override
     public void uploadResource(Long sessionId, String fileType, MultipartFile file) {

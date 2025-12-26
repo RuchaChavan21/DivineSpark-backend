@@ -33,6 +33,9 @@ public class Session {
     @Column(name = "paid_zoom_link")
     private String paidZoomLink;
 
+    @Column(name = "zoom_meeting_id")
+    private String zoomMeetingId;
+
     @Column(nullable = false)
     private LocalDateTime startTime;
 
@@ -132,6 +135,14 @@ public class Session {
 
     public void setPaidZoomLink(String paidZoomLink) {
         this.paidZoomLink = paidZoomLink;
+    }
+
+    public String getZoomMeetingId() {
+        return zoomMeetingId;
+    }
+
+    public void setZoomMeetingId(String zoomMeetingId) {
+        this.zoomMeetingId = zoomMeetingId;
     }
 
     public LocalDateTime getStartTime() {

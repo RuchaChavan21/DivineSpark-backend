@@ -1,13 +1,16 @@
 package com.divinespark.service.impl;
 
 import com.divinespark.dto.PaymentCallbackRequest;
+import com.divinespark.dto.ZoomRegistrationResponse;
 import com.divinespark.entity.Booking;
 import com.divinespark.entity.Payment;
 import com.divinespark.entity.Session;
+import com.divinespark.entity.User;
 import com.divinespark.repository.BookingRepository;
 import com.divinespark.repository.PaymentRepository;
 import com.divinespark.service.EmailService;
 import com.divinespark.service.PaymentService;
+import com.divinespark.service.ZoomService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,11 +21,14 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final BookingRepository bookingRepo;
     private final EmailService emailService;
+    private final ZoomService zoomService;
 
-    public PaymentServiceImpl(PaymentRepository paymentRepository, BookingRepository bookingRepository, EmailService emailService) {
+
+    public PaymentServiceImpl(PaymentRepository paymentRepository, BookingRepository bookingRepository, EmailService emailService, ZoomService zoomService) {
         this.paymentRepository = paymentRepository;
         this.bookingRepo = bookingRepository;
         this.emailService = emailService;
+        this.zoomService = zoomService;
     }
 
     @Transactional
@@ -74,14 +80,33 @@ public class PaymentServiceImpl implements PaymentService {
                 session.getAvailableSeats() - 1
         );
 
+        User user = booking.getUser();
+
+// Register user to Zoom meeting
+        ZoomRegistrationResponse zoomResponse =
+                zoomService.registerUser(
+                        session.getZoomMeetingId(),
+                        user.getEmail(),
+                        user.getUsername(),
+                        "User"
+                );
+
+// Save Zoom details in booking
+        booking.setZoomRegistrantId(zoomResponse.getRegistrantId());
+        booking.setZoomJoinUrl(zoomResponse.getJoinUrl());
+        bookingRepo.save(booking);
+
+
         // Send PAID session link
-        emailService.sendFreeSessionLink(
-                booking.getUser().getEmail(),
+        emailService.sendSessionJoinLink(
+                user.getEmail(),
                 session.getTitle(),
-                session.getPaidZoomLink(),
+                booking.getZoomJoinUrl(),
                 session.getGuideName(),
                 session.getStartTime().toString(),
-                session.getEndTime().toString()
+                session.getEndTime().toString(),
+                "PAID"
         );
+
     }
 }
