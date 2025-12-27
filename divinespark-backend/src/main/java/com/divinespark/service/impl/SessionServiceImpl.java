@@ -13,6 +13,7 @@ import com.divinespark.service.SessionService;
 import com.divinespark.service.StorageService;
 
 import com.divinespark.service.ZoomService;
+import com.divinespark.utils.ZoomNameUtil;
 import com.divinespark.utils.ZoomUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -170,12 +171,15 @@ public class SessionServiceImpl implements SessionService  {
         booking.setStatus("CONFIRMED");
         bookingRepository.save(booking);
 
+        String firstName = ZoomNameUtil.getFirstName(user.getUsername());
+        String lastName = ZoomNameUtil.getLastName();
+
         ZoomRegistrationResponse zoomResponse =
                 zoomService.registerUser(
                         session.getZoomMeetingId(),
                         user.getEmail(),
-                        user.getUsername(),
-                        "User"
+                        firstName,
+                        lastName
                 );
 
         booking.setZoomRegistrantId(zoomResponse.getRegistrantId());
