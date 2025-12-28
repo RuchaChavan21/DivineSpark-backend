@@ -1,7 +1,6 @@
 package com.divinespark.controller.user;
 
 import com.divinespark.dto.UserBookingResponse;
-import com.divinespark.entity.User;
 import com.divinespark.security.CustomUserDetails;
 import com.divinespark.service.BookingService;
 import org.springframework.http.ResponseEntity;

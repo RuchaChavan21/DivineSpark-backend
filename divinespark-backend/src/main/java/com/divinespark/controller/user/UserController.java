@@ -58,14 +58,17 @@ public class UserController {
     // ---------- PAY FOR SESSION ----------
     @PostMapping("/{sessionId}/pay")
     public ResponseEntity<PaymentInitiateResponse> initiatePayment(
-            @PathVariable(name = "sessionId") Long sessionId,
+            @PathVariable("sessionId") Long sessionId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        User user = userRepository.findById(userDetails.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (userDetails == null) {
+            return ResponseEntity.status(401).build();
+        }
 
         return ResponseEntity.ok(
-                sessionService.initiatePaidSession(sessionId, user.getId())
+                sessionService.initiatePaidSession(sessionId, userDetails.getId())
         );
     }
+
+
 }
