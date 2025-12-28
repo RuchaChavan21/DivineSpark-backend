@@ -34,7 +34,7 @@ public interface SessionService {
 
     void uploadResource(Long sessionId, String fileType, MultipartFile file);
 
-
+    Page<Session> getPastSessions(int page, int size);
 
 
 }

@@ -7,4 +7,6 @@ import java.util.List;
 public interface BookingService {
 
     List<UserBookingResponse> getUserBookings(Long userId);
+    void cancelBooking(Long bookingId, Long userId);
+
 }

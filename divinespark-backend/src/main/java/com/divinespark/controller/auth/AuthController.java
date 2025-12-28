@@ -54,6 +54,7 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("token", token));
     }
 
+
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(
             @Valid @RequestBody RegisterRequest request) {

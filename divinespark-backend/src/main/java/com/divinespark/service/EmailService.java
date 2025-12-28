@@ -5,6 +5,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -113,6 +114,22 @@ public class EmailService {
         } catch (MessagingException e) {
             log.error("Failed to send session join email to {}", email, e);
         }
+    }
+    public void sendBookingCancelledEmail(
+            String toEmail,
+            String sessionTitle,
+            String startTime) {
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(toEmail);
+        message.setSubject("Your booking has been cancelled");
+        message.setText(
+                "Your booking for the session \"" + sessionTitle + "\" scheduled at "
+                        + startTime + " has been successfully cancelled.\n\n"
+                        + "Regards,\nDivineSpark Team"
+        );
+
+        mailSender.send(message);
     }
 
 }
