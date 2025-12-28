@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -332,6 +333,13 @@ public class SessionServiceImpl implements SessionService  {
     @Override
     public List<AdminSessionBookingResponse> getBookingsBySession(Long sessionId) {
         return bookingRepository.findBookingsBySessionId(sessionId);
+    }
+    @Override
+    public Page<Session> getPastSessions(int page, int size) {
+        return repo.findPastSessions(
+                LocalDateTime.now(),
+                PageRequest.of(page, size)
+        );
     }
 
 }

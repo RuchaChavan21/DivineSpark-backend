@@ -106,6 +106,24 @@ public class AdminSessionController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/past")
+    public ResponseEntity<SessionListResponse> getPastSessions(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<Session> result = sessionService.getPastSessions(page, size);
+
+        SessionListResponse response = new SessionListResponse();
+        response.setSessions(result.getContent());
+        response.setPage(result.getNumber());
+        response.setSize(result.getSize());
+        response.setTotalElements(result.getTotalElements());
+        response.setTotalPages(result.getTotalPages());
+
+        return ResponseEntity.ok(response);
+    }
+
 
 
 
