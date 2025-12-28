@@ -1,16 +1,19 @@
 package com.divinespark.dto;
 
+import com.divinespark.entity.enums.SessionType;
+
 import java.time.LocalDateTime;
 
 public class SessionUserResponse {
     private Long id;
     private String title;
     private String description;
-    private String type;
+    private SessionType type;
     private double price;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private String guideName;
+    private int availableSeats;
 
     public Long getId() {
         return id;
@@ -30,10 +33,11 @@ public class SessionUserResponse {
     public void setDescription(String description) {
         this.description = description;
     }
-    public String getType() {
+    public SessionType getType() {
         return type;
     }
-    public void setType(String type) {
+
+    public void setType(SessionType type) {
         this.type = type;
     }
     public double getPrice() {
@@ -59,5 +63,13 @@ public class SessionUserResponse {
     }
     public void setGuideName(String guideName) {
         this.guideName = guideName;
+    }
+
+    public int getAvailableSeats() {
+        return availableSeats;
+    }
+
+    public void setAvailableSeats(int availableSeats) {
+        this.availableSeats = availableSeats;
     }
 }
