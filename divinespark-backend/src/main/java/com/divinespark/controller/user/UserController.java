@@ -23,38 +23,42 @@ public class UserController {
         this.userRepository = userRepository;
     }
 
+    // ---------- LIST SESSIONS ----------
     @GetMapping
     public ResponseEntity<SessionUserListResponse> getSessions(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String type
-    ) {
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size,
+            @RequestParam(name = "type", required = false) String type) {
+
         return ResponseEntity.ok(
                 sessionService.getUpcomingSessions(page, size, type)
         );
     }
 
+    // ---------- SESSION DETAILS ----------
     @GetMapping("/{sessionId}")
     public ResponseEntity<SessionDetailResponse> getSessionDetails(
-            @PathVariable("sessionId") Long sessionId) {
+            @PathVariable(name = "sessionId") Long sessionId) {
 
         return ResponseEntity.ok(
                 sessionService.getSessionDetails(sessionId)
         );
     }
 
+    // ---------- JOIN FREE SESSION ----------
     @PostMapping("/{sessionId}/join")
-    public ResponseEntity<?> joinFreeSession(
-            @PathVariable("sessionId") Long sessionId,
-            @AuthenticationPrincipal CustomUserDetails userDetails
-    ) {
+    public ResponseEntity<String> joinFreeSession(
+            @PathVariable(name = "sessionId") Long sessionId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
         sessionService.joinFreeSession(sessionId, userDetails.getId());
         return ResponseEntity.ok("Joined successfully");
     }
 
+    // ---------- PAY FOR SESSION ----------
     @PostMapping("/{sessionId}/pay")
     public ResponseEntity<PaymentInitiateResponse> initiatePayment(
-            @PathVariable("sessionId") Long sessionId,
+            @PathVariable(name = "sessionId") Long sessionId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         User user = userRepository.findById(userDetails.getId())
