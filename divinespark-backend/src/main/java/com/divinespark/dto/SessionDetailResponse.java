@@ -1,5 +1,8 @@
 package com.divinespark.dto;
 
+import com.divinespark.entity.enums.SessionStatus;
+import com.divinespark.entity.enums.SessionType;
+
 import java.time.LocalDateTime;
 
 public class SessionDetailResponse {
@@ -7,14 +10,14 @@ public class SessionDetailResponse {
     private Long id;
     private String title;
     private String description;
-    private String type;
+    private SessionType type;
     private double price;
     private String trainerName;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private int maxSeats;
     private int availableSeats;
-    private String status;
+    private SessionStatus status;
 
     public Long getId() {
         return id;
@@ -37,10 +40,11 @@ public class SessionDetailResponse {
         this.description = description;
     }
 
-    public String getType() {
+    public SessionType getType() {
         return type;
     }
-    public void setType(String type) {
+
+    public void setType(SessionType type) {
         this.type = type;
     }
 
@@ -86,10 +90,11 @@ public class SessionDetailResponse {
         this.availableSeats = availableSeats;
     }
 
-    public String getStatus() {
+    public SessionStatus getStatus() {
         return status;
     }
-    public void setStatus(String status) {
+
+    public void setStatus(SessionStatus status) {
         this.status = status;
     }
 }
