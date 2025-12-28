@@ -1,6 +1,7 @@
 package com.divinespark.controller.admin;
 
 import com.divinespark.dto.*;
+
 import com.divinespark.entity.Session;
 import com.divinespark.service.SessionService;
 import org.springframework.data.domain.Page;
@@ -22,41 +23,35 @@ public class AdminSessionController {
         this.sessionService = sessionService;
     }
 
-    // ---------- CREATE ----------
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<Session> create(
-            @RequestBody SessionCreateRequest req) {
-
+    public ResponseEntity<Session> create(@RequestBody SessionCreateRequest req) {
         return ResponseEntity.ok(sessionService.create(req));
     }
 
-    // ---------- UPDATE ----------
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<Session> update(
-            @PathVariable(name = "id") Long id,
+            @PathVariable("id") Long id,
             @RequestBody SessionUpdateRequest req) {
 
         return ResponseEntity.ok(sessionService.update(id, req));
     }
 
-    // ---------- DELETE ----------
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @PathVariable(name = "id") Long id) {
+            @PathVariable("id") Long id) {
 
         sessionService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
-    // ---------- GET ALL ----------
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<SessionListResponse> getAll(
-            @RequestParam(name = "page", defaultValue = "0") int page,
-            @RequestParam(name = "size", defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
         Page<Session> result = sessionService.getAll(page, size);
 
@@ -70,47 +65,68 @@ public class AdminSessionController {
         return ResponseEntity.ok(response);
     }
 
-    // ---------- USERS BY SESSION ----------
+
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}/users")
     public ResponseEntity<List<AdminSessionUserResponse>> getUsersBySession(
-            @PathVariable(name = "id") Long id) {
+            @PathVariable(value = "id", required = true) Long id) {
 
         return ResponseEntity.ok(sessionService.getUsersBySession(id));
     }
 
-    // ---------- BOOKINGS BY SESSION ----------
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}/bookings")
     public ResponseEntity<List<AdminSessionBookingResponse>> getBookingsBySession(
-            @PathVariable(name = "id") Long id) {
+            @PathVariable(value = "id", required = true) Long id) {
 
         return ResponseEntity.ok(sessionService.getBookingsBySession(id));
     }
 
-    // ---------- UPDATE STATUS ----------
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/status")
     public ResponseEntity<Void> updateSessionStatus(
-            @PathVariable(name = "id") Long id,
+            @PathVariable(value = "id", required = true) Long id,
             @RequestBody SessionStatusUpdateRequest request) {
 
         sessionService.updateStatus(id, request.getStatus());
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.noContent().build(); // 204
     }
 
-    // ---------- UPLOAD RESOURCE ----------
-    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(
             value = "/{id}/resources",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> uploadResource(
-            @PathVariable(name = "id") Long id,
-            @RequestParam(name = "fileType") String fileType,
-            @RequestParam(name = "file") MultipartFile file) {
+            @PathVariable(value = "id", required = true) Long id,
+            @RequestParam("fileType") String fileType,
+            @RequestParam("file") MultipartFile file) {
 
         sessionService.uploadResource(id, fileType, file);
         return ResponseEntity.noContent().build();
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/past")
+    public ResponseEntity<SessionListResponse> getPastSessions(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Page<Session> result = sessionService.getPastSessions(page, size);
+
+        SessionListResponse response = new SessionListResponse();
+        response.setSessions(result.getContent());
+        response.setPage(result.getNumber());
+        response.setSize(result.getSize());
+        response.setTotalElements(result.getTotalElements());
+        response.setTotalPages(result.getTotalPages());
+
+        return ResponseEntity.ok(response);
+    }
+
+
+
+
+
+
 }
