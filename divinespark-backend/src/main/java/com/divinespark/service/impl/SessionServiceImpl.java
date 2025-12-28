@@ -64,21 +64,12 @@ public class SessionServiceImpl implements SessionService  {
         s.setDescription(req.getDescription());
         s.setType(req.getType());
         s.setPrice(req.getPrice());
-        s.setFreeZoomLink(req.getFreeZoomLink());
-        s.setPaidZoomLink(req.getPaidZoomLink());
+        s.setZoomLink(req.getZoomLink());
         s.setStartTime(req.getStartTime());
         s.setEndTime(req.getEndTime());
         s.setMaxSeats(req.getMaxSeats());
         s.setGuideName(req.getGuideName());
-        if(s.getType() == SessionType.FREE){
-            s.setZoomMeetingId(
-                    ZoomUtils.extractMeetingId(req.getFreeZoomLink())
-            );
-        }else{
-            s.setZoomMeetingId(
-                    ZoomUtils.extractMeetingId(req.getPaidZoomLink())
-            );
-        }
+        s.setZoomMeetingId(ZoomUtils.extractMeetingId(req.getZoomLink()));
         return repo.save(s);
     }
 
@@ -91,8 +82,7 @@ public class SessionServiceImpl implements SessionService  {
         if (req.getDescription() != null) s.setDescription(req.getDescription());
         if (req.getType() != null) s.setType(req.getType());
         if (req.getPrice() != null) s.setPrice(req.getPrice());
-        if (req.getFreeZoomLink() != null) s.setFreeZoomLink(req.getFreeZoomLink());
-        if (req.getPaidZoomLink() != null) s.setPaidZoomLink(req.getPaidZoomLink());
+        if (req.getZoomLink() != null) s.setZoomLink(req.getZoomLink());
         if (req.getStartTime() != null) s.setStartTime(req.getStartTime());
         if (req.getEndTime() != null) s.setEndTime(req.getEndTime());
         if (req.getMaxSeats() != null) {

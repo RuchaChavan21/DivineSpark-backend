@@ -45,9 +45,7 @@ public class BookingServiceImpl implements BookingService {
                             session.getStatus().name().equals("UPCOMING")
             ) {
                 if (session.getType().name().equals("FREE")) {
-                    dto.setJoinLink(session.getFreeZoomLink());
-                } else {
-                    dto.setJoinLink(session.getPaidZoomLink());
+                    dto.setJoinLink(session.getZoomLink());
                 }
             }
 

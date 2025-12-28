@@ -9,8 +9,7 @@ public class SessionCreateRequest {
     private String description;
     private SessionType type;
     private double price;
-    private String freeZoomLink;
-    private String paidZoomLink;
+    private String zoomLink;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private int maxSeats;
@@ -54,20 +53,12 @@ public class SessionCreateRequest {
         this.price = price;
     }
 
-    public String getFreeZoomLink() {
-        return freeZoomLink;
+    public String getZoomLink() {
+        return zoomLink;
     }
 
-    public void setFreeZoomLink(String freeZoomLink) {
-        this.freeZoomLink = freeZoomLink;
-    }
-
-    public String getPaidZoomLink() {
-        return paidZoomLink;
-    }
-
-    public void setPaidZoomLink(String paidZoomLink) {
-        this.paidZoomLink = paidZoomLink;
+    public void setZoomLink(String zoomLink) {
+        this.zoomLink = zoomLink;
     }
 
     public LocalDateTime getStartTime() {
