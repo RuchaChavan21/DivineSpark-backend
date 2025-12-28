@@ -1,10 +1,7 @@
 package com.divinespark.service.impl;
 
 import com.divinespark.dto.*;
-import com.divinespark.entity.Booking;
-import com.divinespark.entity.Session;
-import com.divinespark.entity.SessionResource;
-import com.divinespark.entity.User;
+import com.divinespark.entity.*;
 import com.divinespark.entity.enums.SessionStatus;
 import com.divinespark.entity.enums.SessionType;
 import com.divinespark.repository.*;
@@ -13,6 +10,7 @@ import com.divinespark.service.SessionService;
 import com.divinespark.service.StorageService;
 
 import com.divinespark.service.ZoomService;
+import com.divinespark.utils.ZoomNameUtil;
 import com.divinespark.utils.ZoomUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -66,21 +64,12 @@ public class SessionServiceImpl implements SessionService  {
         s.setDescription(req.getDescription());
         s.setType(req.getType());
         s.setPrice(req.getPrice());
-        s.setFreeZoomLink(req.getFreeZoomLink());
-        s.setPaidZoomLink(req.getPaidZoomLink());
+        s.setZoomLink(req.getZoomLink());
         s.setStartTime(req.getStartTime());
         s.setEndTime(req.getEndTime());
         s.setMaxSeats(req.getMaxSeats());
         s.setGuideName(req.getGuideName());
-        if(s.getType() == SessionType.FREE){
-            s.setZoomMeetingId(
-                    ZoomUtils.extractMeetingId(req.getFreeZoomLink())
-            );
-        }else{
-            s.setZoomMeetingId(
-                    ZoomUtils.extractMeetingId(req.getPaidZoomLink())
-            );
-        }
+        s.setZoomMeetingId(ZoomUtils.extractMeetingId(req.getZoomLink()));
         return repo.save(s);
     }
 
@@ -93,8 +82,7 @@ public class SessionServiceImpl implements SessionService  {
         if (req.getDescription() != null) s.setDescription(req.getDescription());
         if (req.getType() != null) s.setType(req.getType());
         if (req.getPrice() != null) s.setPrice(req.getPrice());
-        if (req.getFreeZoomLink() != null) s.setFreeZoomLink(req.getFreeZoomLink());
-        if (req.getPaidZoomLink() != null) s.setPaidZoomLink(req.getPaidZoomLink());
+        if (req.getZoomLink() != null) s.setZoomLink(req.getZoomLink());
         if (req.getStartTime() != null) s.setStartTime(req.getStartTime());
         if (req.getEndTime() != null) s.setEndTime(req.getEndTime());
         if (req.getMaxSeats() != null) {
@@ -170,12 +158,15 @@ public class SessionServiceImpl implements SessionService  {
         booking.setStatus("CONFIRMED");
         bookingRepository.save(booking);
 
+        String firstName = ZoomNameUtil.getFirstName(user.getUsername());
+        String lastName = ZoomNameUtil.getLastName();
+
         ZoomRegistrationResponse zoomResponse =
                 zoomService.registerUser(
                         session.getZoomMeetingId(),
                         user.getEmail(),
-                        user.getUsername(),
-                        "User"
+                        firstName,
+                        lastName
                 );
 
         booking.setZoomRegistrantId(zoomResponse.getRegistrantId());
@@ -221,19 +212,117 @@ public class SessionServiceImpl implements SessionService  {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public SessionUserListResponse getUpcomingSessions(int page, int size, String type) {
-        throw new UnsupportedOperationException("Not implemented yet");
+
+        PageRequest pageRequest = PageRequest.of(page, size);
+
+        Page<Session> sessions;
+
+        if (type != null) {
+            SessionType sessionType = SessionType.valueOf(type.toUpperCase());
+            sessions = repo.findByStatusAndType(
+                    SessionStatus.UPCOMING,
+                    sessionType,
+                    pageRequest
+            );
+        } else {
+            sessions = repo.findByStatus(
+                    SessionStatus.UPCOMING,
+                    pageRequest
+            );
+        }
+
+        List<SessionUserResponse> sessionList = new ArrayList<>();
+
+        for (Session session : sessions.getContent()) {
+            SessionUserResponse dto = new SessionUserResponse();
+            dto.setId(session.getId());
+            dto.setTitle(session.getTitle());
+            dto.setDescription(session.getDescription());
+            dto.setType(session.getType());
+            dto.setPrice(session.getPrice());
+            dto.setStartTime(session.getStartTime());
+            dto.setEndTime(session.getEndTime());
+            dto.setGuideName(session.getGuideName());
+            dto.setAvailableSeats(session.getAvailableSeats());
+            sessionList.add(dto);
+        }
+
+        SessionUserListResponse response = new SessionUserListResponse();
+        response.setSessions(sessionList);
+        response.setTotalPages(sessions.getTotalPages());
+        response.setTotalElements(sessions.getTotalElements());
+
+        return response;
     }
 
+
     @Override
+    @Transactional(readOnly = true)
     public SessionDetailResponse getSessionDetails(Long sessionId) {
-        throw new UnsupportedOperationException("Not implemented yet");
+
+        Session session = repo.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+
+        SessionDetailResponse response = new SessionDetailResponse();
+        response.setId(session.getId());
+        response.setTitle(session.getTitle());
+        response.setDescription(session.getDescription());
+        response.setType(session.getType());
+        response.setPrice(session.getPrice());
+        response.setStartTime(session.getStartTime());
+        response.setEndTime(session.getEndTime());
+        response.setTrainerName(session.getGuideName());
+        response.setMaxSeats(session.getMaxSeats());
+        response.setAvailableSeats(session.getAvailableSeats());
+        response.setStatus(session.getStatus());
+
+        return response;
     }
 
+
     @Override
+    @Transactional
     public PaymentInitiateResponse initiatePaidSession(Long sessionId, Long userId) {
-        throw new UnsupportedOperationException("Not implemented yet");
+
+        Session session = repo.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+
+        if (session.getType() != SessionType.PAID) {
+            throw new RuntimeException("This session is not paid");
+        }
+
+        if (session.getAvailableSeats() <= 0) {
+            throw new RuntimeException("No seats available");
+        }
+
+        if (bookingRepository.existsByUserIdAndSessionId(userId, sessionId)) {
+            throw new RuntimeException("Already booked");
+        }
+
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Booking booking = new Booking();
+        booking.setSession(session);
+        booking.setUser(user);
+        booking.setStatus("PENDING");
+        bookingRepository.save(booking);
+
+        Payment payment = new Payment();
+        payment.setBookingId(booking.getId());
+        payment.setAmount(session.getPrice());
+        payment.setStatus("CREATED");
+        paymentRepository.save(payment);
+
+        PaymentInitiateResponse response = new PaymentInitiateResponse();
+        response.setBookingId(booking.getId());
+        response.setAmount(session.getPrice());
+
+        return response;
     }
+
 
     @Override
     public List<AdminSessionUserResponse> getUsersBySession(Long sessionId) {

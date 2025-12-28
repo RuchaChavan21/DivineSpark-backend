@@ -11,6 +11,7 @@ import com.divinespark.repository.PaymentRepository;
 import com.divinespark.service.EmailService;
 import com.divinespark.service.PaymentService;
 import com.divinespark.service.ZoomService;
+import com.divinespark.utils.ZoomNameUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -82,13 +83,16 @@ public class PaymentServiceImpl implements PaymentService {
 
         User user = booking.getUser();
 
+        String firstName = ZoomNameUtil.getFirstName(user.getUsername());
+        String lastName = ZoomNameUtil.getLastName();
+
 // Register user to Zoom meeting
         ZoomRegistrationResponse zoomResponse =
                 zoomService.registerUser(
                         session.getZoomMeetingId(),
                         user.getEmail(),
-                        user.getUsername(),
-                        "User"
+                        firstName,
+                        lastName
                 );
 
 // Save Zoom details in booking
