@@ -27,11 +27,8 @@ public class Session {
     @Column(nullable = false)
     private double price;
 
-    @Column(name = "free_zoom_link")
-    private String freeZoomLink;
-
-    @Column(name = "paid_zoom_link")
-    private String paidZoomLink;
+    @Column(name = "zoom_link")
+    private String zoomLink;
 
     @Column(name = "zoom_meeting_id")
     private String zoomMeetingId;
@@ -121,20 +118,12 @@ public class Session {
         this.price = price;
     }
 
-    public String getFreeZoomLink() {
-        return freeZoomLink;
+    public String getZoomLink() {
+        return zoomLink;
     }
 
-    public void setFreeZoomLink(String freeZoomLink) {
-        this.freeZoomLink = freeZoomLink;
-    }
-
-    public String getPaidZoomLink() {
-        return paidZoomLink;
-    }
-
-    public void setPaidZoomLink(String paidZoomLink) {
-        this.paidZoomLink = paidZoomLink;
+    public void setZoomLink(String zoomLink) {
+        this.zoomLink = zoomLink;
     }
 
     public String getZoomMeetingId() {
