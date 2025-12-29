@@ -14,6 +14,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
+
 @Configuration
 public class SecurityConfig {
 
@@ -35,25 +36,24 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // preflight
+                        // Preflight
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // public
+                        // Public APIs
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/api/v1/auth/**"
                         ).permitAll()
 
-                        // public read
-                        .requestMatchers(HttpMethod.GET, "/api/v1/sessions/**")
-                        .permitAll()
+                        // PUBLIC: read sessions
+                        .requestMatchers(HttpMethod.GET, "/api/v1/sessions/**").permitAll()
 
-                        // USER actions (JOIN + PAY)
+                        // USER: join + pay
                         .requestMatchers(HttpMethod.POST, "/api/v1/sessions/**")
                         .hasRole("USER")
 
-                        // ADMIN actions
+                        // ADMIN
                         .requestMatchers("/api/v1/admin/**")
                         .hasRole("ADMIN")
 
@@ -65,19 +65,28 @@ public class SecurityConfig {
         return http.build();
     }
 
+
+
+
+    // ---------------- CORS CONFIG ----------------
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of("http://localhost:5173"));
-        config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
+        config.setAllowedMethods(List.of(
+                "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
+        ));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
     }
 
+    // ---------------- PASSWORD ENCODER ----------------
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

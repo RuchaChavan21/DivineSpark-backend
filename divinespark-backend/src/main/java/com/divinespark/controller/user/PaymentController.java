@@ -34,11 +34,16 @@ public class PaymentController {
             @RequestBody PaymentInitiateRequest request,
             Authentication authentication) {
 
-        String email = authentication.getName(); // logged-in user
+        if (authentication == null) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        String email = authentication.getName();
         return ResponseEntity.ok(
                 paymentService.initiatePayment(request.getSessionId(), email)
         );
     }
+
 
 
 }

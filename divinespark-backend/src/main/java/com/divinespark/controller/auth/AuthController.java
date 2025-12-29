@@ -2,7 +2,9 @@ package com.divinespark.controller.auth;
 
 
 import com.divinespark.dto.*;
+import com.divinespark.entity.User;
 import com.divinespark.entity.enums.OtpPurpose;
+import com.divinespark.repository.UserRepository;
 import com.divinespark.service.OtpService;
 import com.divinespark.utils.JwtUtil;
 import com.divinespark.service.AuthService;
@@ -19,11 +21,13 @@ public class AuthController {
     private final AuthService authService;
     private final JwtUtil jwtUtil;
     private final OtpService otpService;
+    private final UserRepository userRepository;
 
-    public AuthController(AuthService authService, JwtUtil jwtUtil, OtpService otpService) {
+    public AuthController(AuthService authService, JwtUtil jwtUtil, OtpService otpService, UserRepository userRepository) {
         this.authService = authService;
         this.jwtUtil = jwtUtil;
         this.otpService = otpService;
+        this.userRepository = userRepository;
     }
 
     @PostMapping("/request-otp")
@@ -49,7 +53,14 @@ public class AuthController {
                 request.getPurpose()
         );
 
-        String token = jwtUtil.generateToken(request.getEmail());
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String token = jwtUtil.generateToken(
+                user.getEmail(),
+                user.getRole().name()
+        );
+
 
         return ResponseEntity.ok(Map.of("token", token));
     }
