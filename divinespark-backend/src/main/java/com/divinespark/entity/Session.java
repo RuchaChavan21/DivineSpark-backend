@@ -45,10 +45,10 @@ public class Session {
     private SessionStatus status = SessionStatus.UPCOMING;
 
     @Column(nullable = false)
-    private AtomicInteger maxSeats;
+    private AtomicInteger maxSeats = new AtomicInteger(0);
 
     @Column(nullable = false)
-    private AtomicInteger availableSeats;
+    private AtomicInteger availableSeats = new AtomicInteger(0);
 
     @Column(nullable = false)
     private String guideName;
