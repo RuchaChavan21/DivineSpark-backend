@@ -25,7 +25,6 @@ import java.util.List;
 @Service
 @Transactional
 public class SessionServiceImpl implements SessionService  {
-
     private final SessionRepository repo;
     private final BookingRepository bookingRepository;
     private final UserRepository userRepo;
@@ -146,8 +145,9 @@ public class SessionServiceImpl implements SessionService  {
             throw new RuntimeException("No seats available");
         }
 
-        if (bookingRepository.existsByUserIdAndSessionId(userId, sessionId)) {
-            throw new RuntimeException("Already joined");
+        if (bookingRepository.existsByUserIdAndSessionIdAndStatus(
+                userId, sessionId, "CONFIRMED")) {
+            throw new RuntimeException("Already booked");
         }
 
         User user = userRepo.findById(userId)
@@ -298,23 +298,29 @@ public class SessionServiceImpl implements SessionService  {
             throw new RuntimeException("No seats available");
         }
 
-        if (bookingRepository.existsByUserIdAndSessionId(userId, sessionId)) {
+        //Block ONLY confirmed booking
+        if (bookingRepository.existsByUserIdAndSessionIdAndStatus(
+                userId, sessionId, "CONFIRMED")) {
             throw new RuntimeException("Already booked");
         }
 
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Booking booking = new Booking();
-        booking.setSession(session);
-        booking.setUser(user);
-        booking.setStatus("PENDING");
-        bookingRepository.save(booking);
+        Booking booking = bookingRepository
+                .findByUserIdAndSessionIdAndStatus(userId, sessionId, "PENDING")
+                .orElseGet(() -> {
+                    Booking b = new Booking();
+                    b.setSession(session);
+                    b.setUser(user);
+                    b.setStatus("PENDING");
+                    return bookingRepository.save(b);
+                });
 
         Payment payment = new Payment();
         payment.setBookingId(booking.getId());
         payment.setAmount(session.getPrice());
-        payment.setStatus("CREATED"); // error over here when gatewayOrderId is null (For now made it nullable)
+        payment.setStatus("CREATED");
         paymentRepository.save(payment);
 
         PaymentInitiateResponse response = new PaymentInitiateResponse();
@@ -323,6 +329,8 @@ public class SessionServiceImpl implements SessionService  {
 
         return response;
     }
+
+
 
 
     @Override

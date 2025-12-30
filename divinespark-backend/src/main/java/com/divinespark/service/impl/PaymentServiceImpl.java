@@ -113,4 +113,48 @@ public class PaymentServiceImpl implements PaymentService {
         );
 
     }
+
+    @Transactional
+    public void handlePaymentFailure(String gatewayOrderId) {
+
+        Payment payment = paymentRepository
+                .findByGatewayOrderId(gatewayOrderId);
+
+        if ("FAILED".equals(payment.getStatus())) {
+            return; // idempotent
+        }
+
+        payment.setStatus("FAILED");
+        paymentRepository.save(payment);
+
+        Booking booking = bookingRepo
+                .findById(payment.getBookingId())
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        booking.setStatus("FAILED");
+        bookingRepo.save(booking);
+    }
+
+    @Transactional
+    public void handlePaymentSuccess(String gatewayOrderId) {
+
+        Payment payment = paymentRepository
+                .findByGatewayOrderId(gatewayOrderId);
+
+        if ("SUCCESS".equals(payment.getStatus())) {
+            return;
+        }
+
+        payment.setStatus("SUCCESS");
+        paymentRepository.save(payment);
+
+        Booking booking = bookingRepo
+                .findById(payment.getBookingId())
+                .orElseThrow();
+
+        booking.setStatus("CONFIRMED");
+        bookingRepo.save(booking);
+    }
+
+
 }
