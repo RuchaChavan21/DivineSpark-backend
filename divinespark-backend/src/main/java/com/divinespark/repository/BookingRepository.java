@@ -7,12 +7,18 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
-    boolean existsByUserIdAndSessionId(Long userId, Long sessionId);
+    boolean existsByUserIdAndSessionIdAndStatus(
+            Long userId,
+            Long sessionId,
+            String status
+    );
+
 
     @Query("""
         SELECT b FROM Booking b
@@ -54,5 +60,17 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<AdminSessionBookingResponse> findBookingsBySessionId(
             @Param("sessionId") Long sessionId
     );
+
+    Optional<Booking> findByUserIdAndSessionIdAndStatus(
+            Long userId,
+            Long sessionId,
+            String status
+    );
+
+    List<Booking> findByStatusAndCreatedAtBefore(
+            String status,
+            LocalDateTime cutoffTime
+    );
+
 
 }
