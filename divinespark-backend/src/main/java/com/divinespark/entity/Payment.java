@@ -22,7 +22,6 @@ public class Payment {
     @Column(nullable = false)
     private String status; // CREATED, SUCCESS, FAILED
 
-    @Column(nullable = false)
     private String gatewayOrderId;
 
     private LocalDateTime createdAt;
