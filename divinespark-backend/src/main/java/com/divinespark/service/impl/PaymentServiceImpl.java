@@ -68,7 +68,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         Session session = booking.getSession();
 
-        if (session.getAvailableSeats() <= 0) {
+        if (session.getAvailableSeats().get() <= 0) {
             throw new RuntimeException("No seats left");
         }
 
@@ -78,7 +78,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         // Reduce seats
         session.setAvailableSeats(
-                session.getAvailableSeats() - 1
+                session.getAvailableSeats().decrementAndGet()
         );
 
         User user = booking.getUser();
