@@ -314,7 +314,7 @@ public class SessionServiceImpl implements SessionService  {
         Payment payment = new Payment();
         payment.setBookingId(booking.getId());
         payment.setAmount(session.getPrice());
-        payment.setStatus("CREATED");
+        payment.setStatus("CREATED"); // error over here when gatewayOrderId is null (For now made it nullable)
         paymentRepository.save(payment);
 
         PaymentInitiateResponse response = new PaymentInitiateResponse();
