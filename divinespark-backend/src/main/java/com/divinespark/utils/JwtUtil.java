@@ -1,5 +1,7 @@
 package com.divinespark.utils;
 
+
+import com.divinespark.entity.enums.Role;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -7,8 +9,6 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 @Component
 public class JwtUtil {
@@ -23,15 +23,10 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    // 🔑 GENERATE TOKEN WITH ROLE
-    public String generateToken(String email, String role) {
-
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("role", role); // USER / ADMIN
-
+    public String generateToken(String email, Role role) {
         return Jwts.builder()
-                .setClaims(claims)
                 .setSubject(email)
+                .claim("role", role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
@@ -39,24 +34,17 @@ public class JwtUtil {
     }
 
     public String extractEmail(String token) {
-        return getClaims(token).getSubject();
-    }
-
-    public String extractRole(String token) {
-        return getClaims(token).get("role", String.class);
-    }
-
-    private Claims getClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build()
                 .parseClaimsJws(token)
-                .getBody();
+                .getBody()
+                .getSubject();
     }
 
     public boolean validateToken(String token) {
         try {
-            getClaims(token);
+            extractEmail(token);
             return true;
         } catch (JwtException e) {
             return false;
