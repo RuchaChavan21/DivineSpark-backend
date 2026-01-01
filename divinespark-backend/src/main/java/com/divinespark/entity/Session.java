@@ -5,6 +5,7 @@ import com.divinespark.entity.enums.SessionType;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Entity
 @Table(name = "sessions")
@@ -44,10 +45,10 @@ public class Session {
     private SessionStatus status = SessionStatus.UPCOMING;
 
     @Column(nullable = false)
-    private int maxSeats;
+    private AtomicInteger maxSeats = new AtomicInteger(0);
 
     @Column(nullable = false)
-    private int availableSeats;
+    private AtomicInteger availableSeats = new AtomicInteger(0);
 
     @Column(nullable = false)
     private String guideName;
@@ -158,20 +159,20 @@ public class Session {
         this.status = status;
     }
 
-    public int getMaxSeats() {
+    public AtomicInteger getMaxSeats() {
         return maxSeats;
     }
 
     public void setMaxSeats(int maxSeats) {
-        this.maxSeats = maxSeats;
+        this.maxSeats.set(maxSeats);
     }
 
-    public int getAvailableSeats() {
+    public AtomicInteger getAvailableSeats() {
         return availableSeats;
     }
 
     public void setAvailableSeats(int availableSeats) {
-        this.availableSeats = availableSeats;
+        this.availableSeats.set(availableSeats);
     }
 
     public String getGuideName() {

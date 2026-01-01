@@ -25,7 +25,6 @@ import java.util.List;
 @Service
 @Transactional
 public class SessionServiceImpl implements SessionService  {
-
     private final SessionRepository repo;
     private final BookingRepository bookingRepository;
     private final UserRepository userRepo;
@@ -142,12 +141,13 @@ public class SessionServiceImpl implements SessionService  {
             throw new RuntimeException("Session not available");
         }
 
-        if (session.getAvailableSeats() <= 0) {
+        if (session.getAvailableSeats().get() <= 0) {
             throw new RuntimeException("No seats available");
         }
 
-        if (bookingRepository.existsByUserIdAndSessionId(userId, sessionId)) {
-            throw new RuntimeException("Already joined");
+        if (bookingRepository.existsByUserIdAndSessionIdAndStatus(
+                userId, sessionId, "CONFIRMED")) {
+            throw new RuntimeException("Already booked");
         }
 
         User user = userRepo.findById(userId)
@@ -174,7 +174,7 @@ public class SessionServiceImpl implements SessionService  {
         booking.setZoomJoinUrl(zoomResponse.getJoinUrl());
         bookingRepository.save(booking);
 
-        session.setAvailableSeats(session.getAvailableSeats() - 1);
+        session.setAvailableSeats(session.getAvailableSeats().decrementAndGet());
 
         emailService.sendSessionJoinLink(
                 user.getEmail(),
@@ -246,7 +246,7 @@ public class SessionServiceImpl implements SessionService  {
             dto.setStartTime(session.getStartTime());
             dto.setEndTime(session.getEndTime());
             dto.setGuideName(session.getGuideName());
-            dto.setAvailableSeats(session.getAvailableSeats());
+            dto.setAvailableSeats(session.getAvailableSeats().get());
             sessionList.add(dto);
         }
 
@@ -275,8 +275,8 @@ public class SessionServiceImpl implements SessionService  {
         response.setStartTime(session.getStartTime());
         response.setEndTime(session.getEndTime());
         response.setTrainerName(session.getGuideName());
-        response.setMaxSeats(session.getMaxSeats());
-        response.setAvailableSeats(session.getAvailableSeats());
+        response.setMaxSeats(session.getMaxSeats().get());
+        response.setAvailableSeats(session.getAvailableSeats().get());
         response.setStatus(session.getStatus());
 
         return response;
@@ -294,22 +294,28 @@ public class SessionServiceImpl implements SessionService  {
             throw new RuntimeException("This session is not paid");
         }
 
-        if (session.getAvailableSeats() <= 0) {
+        if (session.getAvailableSeats().get() <= 0) {
             throw new RuntimeException("No seats available");
         }
 
-        if (bookingRepository.existsByUserIdAndSessionId(userId, sessionId)) {
+        //Block ONLY confirmed booking
+        if (bookingRepository.existsByUserIdAndSessionIdAndStatus(
+                userId, sessionId, "CONFIRMED")) {
             throw new RuntimeException("Already booked");
         }
 
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Booking booking = new Booking();
-        booking.setSession(session);
-        booking.setUser(user);
-        booking.setStatus("PENDING");
-        bookingRepository.save(booking);
+        Booking booking = bookingRepository
+                .findByUserIdAndSessionIdAndStatus(userId, sessionId, "PENDING")
+                .orElseGet(() -> {
+                    Booking b = new Booking();
+                    b.setSession(session);
+                    b.setUser(user);
+                    b.setStatus("PENDING");
+                    return bookingRepository.save(b);
+                });
 
         Payment payment = new Payment();
         payment.setBookingId(booking.getId());
@@ -323,6 +329,8 @@ public class SessionServiceImpl implements SessionService  {
 
         return response;
     }
+
+
 
 
     @Override

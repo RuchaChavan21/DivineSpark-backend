@@ -80,7 +80,7 @@ public class BookingServiceImpl implements BookingService {
 
         // Restore seat
         Session session = booking.getSession();
-        session.setAvailableSeats(session.getAvailableSeats() + 1);
+        session.setAvailableSeats(session.getAvailableSeats().incrementAndGet());
 
         bookingRepository.save(booking);
 

@@ -9,4 +9,6 @@ public interface PaymentService {
     PaymentInitiateResponse initiatePayment(Long sessionId, String userEmail);
 
 
+    public void handlePaymentFailure(String gatewayOrderId);
+
 }

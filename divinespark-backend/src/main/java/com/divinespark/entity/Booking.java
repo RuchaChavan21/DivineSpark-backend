@@ -30,7 +30,7 @@ public class Booking {
     @Column(nullable = false)
     private String status; // CONFIRMED
 
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @PrePersist
