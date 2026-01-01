@@ -49,7 +49,7 @@ public class AuthController {
                 request.getPurpose()
         );
 
-        String token = jwtUtil.generateToken(request.getEmail());
+        String token = jwtUtil.generateToken(request.getEmail(), request.getRole());
 
         return ResponseEntity.ok(Map.of("token", token));
     }
