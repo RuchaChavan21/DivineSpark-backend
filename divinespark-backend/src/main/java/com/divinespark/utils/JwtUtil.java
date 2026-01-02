@@ -1,12 +1,11 @@
 package com.divinespark.utils;
 
-
-import com.divinespark.entity.enums.Role;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 
@@ -19,20 +18,14 @@ public class JwtUtil {
     @Value("${jwt.expiration}")
     private long expiration;
 
+    // 🔐 Signing Key
     private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes());
+        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String extractRole(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .get("role", String.class);
-    }
-
+    // ✅ Generate JWT (used for NORMAL + OAUTH login)
     public String generateToken(String email, String role) {
+
         return Jwts.builder()
                 .setSubject(email)
                 .claim("role", role)
@@ -42,21 +35,40 @@ public class JwtUtil {
                 .compact();
     }
 
+    // 📤 Extract Email (Subject)
     public String extractEmail(String token) {
+        return parseClaims(token).getSubject();
+    }
+
+    // 📤 Extract Role
+    public String extractRole(String token) {
+        return parseClaims(token).get("role", String.class);
+    }
+
+    // ✅ Token Validation (used by JWT filter)
+    public boolean validateToken(String token) {
+        try {
+            parseClaims(token);
+            return true;
+        } catch (ExpiredJwtException e) {
+            return false;
+        } catch (UnsupportedJwtException e) {
+            return false;
+        } catch (MalformedJwtException e) {
+            return false;
+        } catch (SecurityException e) {
+            return false;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    // 🔁 Centralized parsing
+    private Claims parseClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build()
                 .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
-    }
-
-    public boolean validateToken(String token) {
-        try {
-            extractEmail(token);
-            return true;
-        } catch (JwtException e) {
-            return false;
-        }
+                .getBody();
     }
 }
