@@ -23,7 +23,16 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    public String generateToken(String email, Role role) {
+    public String extractRole(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("role", String.class);
+    }
+
+    public String generateToken(String email, String role) {
         return Jwts.builder()
                 .setSubject(email)
                 .claim("role", role)

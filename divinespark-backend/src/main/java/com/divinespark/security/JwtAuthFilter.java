@@ -7,6 +7,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
@@ -40,15 +43,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String token = authHeader.substring(7);
 
             if (jwtUtil.validateToken(token)) {
+
                 String email = jwtUtil.extractEmail(token);
-                UserDetails userDetails =
-                        userDetailsService.loadUserByUsername(email);
+                String role = jwtUtil.extractRole(token);
+
+                List<GrantedAuthority> authorities = List.of(
+                        new SimpleGrantedAuthority("ROLE_" + role)
+                );
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
-                                userDetails,
+                                email,
                                 null,
-                                userDetails.getAuthorities()
+                                authorities
                         );
 
                 authentication.setDetails(
@@ -58,7 +65,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder.getContext()
                         .setAuthentication(authentication);
+
+                System.out.println(
+                        "SPRING AUTHORITIES → " +
+                                SecurityContextHolder.getContext()
+                                        .getAuthentication()
+                                        .getAuthorities()
+                );
+
             }
+
         }
 
         filterChain.doFilter(request, response);
