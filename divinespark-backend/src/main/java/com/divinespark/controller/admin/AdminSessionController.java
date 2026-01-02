@@ -23,13 +23,13 @@ public class AdminSessionController {
         this.sessionService = sessionService;
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<Session> create(@RequestBody SessionCreateRequest req) {
         return ResponseEntity.ok(sessionService.create(req));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<Session> update(
             @PathVariable("id") Long id,
@@ -38,7 +38,7 @@ public class AdminSessionController {
         return ResponseEntity.ok(sessionService.update(id, req));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @PathVariable("id") Long id) {
@@ -47,7 +47,7 @@ public class AdminSessionController {
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<SessionListResponse> getAll(
             @RequestParam(defaultValue = "0") int page,
@@ -66,7 +66,7 @@ public class AdminSessionController {
     }
 
 
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}/users")
     public ResponseEntity<List<AdminSessionUserResponse>> getUsersBySession(
             @PathVariable(value = "id", required = true) Long id) {
@@ -74,7 +74,7 @@ public class AdminSessionController {
         return ResponseEntity.ok(sessionService.getUsersBySession(id));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}/bookings")
     public ResponseEntity<List<AdminSessionBookingResponse>> getBookingsBySession(
             @PathVariable(value = "id", required = true) Long id) {
@@ -82,7 +82,7 @@ public class AdminSessionController {
         return ResponseEntity.ok(sessionService.getBookingsBySession(id));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/status")
     public ResponseEntity<Void> updateSessionStatus(
             @PathVariable(value = "id", required = true) Long id,
@@ -96,7 +96,7 @@ public class AdminSessionController {
             value = "/{id}/resources",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> uploadResource(
             @PathVariable(value = "id", required = true) Long id,
             @RequestParam("fileType") String fileType,
@@ -106,7 +106,7 @@ public class AdminSessionController {
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/past")
     public ResponseEntity<SessionListResponse> getPastSessions(
             @RequestParam(defaultValue = "0") int page,
