@@ -6,6 +6,16 @@ public class AdminStatsResponse {
     private long totalBookings;
     private long upcomingSessions;
     private long pastSessions;
+    private long totalSessions;
+
+    public long getTotalSessions() {
+        return totalSessions;
+    }
+
+    public void setTotalSessions(long totalSessions) {
+        this.totalSessions = totalSessions;
+    }
+
 
     public long getTotalUsers() {
         return totalUsers;

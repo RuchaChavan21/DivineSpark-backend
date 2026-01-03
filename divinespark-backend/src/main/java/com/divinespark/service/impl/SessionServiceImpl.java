@@ -360,5 +360,10 @@ public class SessionServiceImpl implements SessionService  {
         return sessionRepository.countByStatus(SessionStatus.COMPLETED);
 
     }
+    @Override
+    public long getTotalSessionCount() {
+        return sessionRepository.count();
+    }
+
 
 }

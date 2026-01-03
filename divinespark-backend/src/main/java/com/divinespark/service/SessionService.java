@@ -39,5 +39,7 @@ public interface SessionService {
     long getUpcomingSessionCount();
 
     long getPastSessionCount();
+    long getTotalSessionCount();
+
 
 }
