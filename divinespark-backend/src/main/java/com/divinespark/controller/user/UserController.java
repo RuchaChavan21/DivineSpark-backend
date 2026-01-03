@@ -8,6 +8,7 @@ import com.divinespark.repository.UserRepository;
 import com.divinespark.security.CustomUserDetails;
 import com.divinespark.service.SessionService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,14 +47,16 @@ public class UserController {
     }
 
     // ---------- JOIN FREE SESSION ----------
+    @PreAuthorize("hasRole('USER')")
     @PostMapping("/{sessionId}/join")
-    public ResponseEntity<String> joinFreeSession(
-            @PathVariable(name = "sessionId") Long sessionId,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
-
+    public ResponseEntity<?> joinFreeSession(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
         sessionService.joinFreeSession(sessionId, userDetails.getId());
         return ResponseEntity.ok("Joined successfully");
     }
+
 
     // ---------- PAY FOR SESSION ----------
     @PostMapping("/{sessionId}/pay")
