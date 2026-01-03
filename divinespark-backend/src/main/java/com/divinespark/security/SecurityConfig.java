@@ -3,6 +3,7 @@ package com.divinespark.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -16,6 +17,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
@@ -41,19 +43,27 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // Public APIs
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
-                                "/api/v1/auth/**",
-                                "/api/v1/sessions/**",
-                                "/oauth2/**",
-                                "/login/**"
+                                "/api/v1/auth/**"
                         ).permitAll()
+
+                        // Public session browsing
+                        .requestMatchers(HttpMethod.GET, "/api/v1/sessions/**").permitAll()
+
+                        // Protected session actions
+                        .requestMatchers(HttpMethod.POST, "/api/v1/sessions/**").hasRole("USER")
+
+                        // Admin
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+
                         .anyRequest().authenticated()
                 )
 
-                // ✅ THIS WAS MISSING (CRITICAL)
+
                 .oauth2Login(oauth -> oauth
                         .successHandler(oAuth2SuccessHandler)
                 )

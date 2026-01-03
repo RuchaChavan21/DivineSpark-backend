@@ -45,17 +45,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             if (jwtUtil.validateToken(token)) {
 
                 String email = jwtUtil.extractEmail(token);
-                String role = jwtUtil.extractRole(token);
 
-                List<GrantedAuthority> authorities = List.of(
-                        new SimpleGrantedAuthority("ROLE_" + role)
-                );
+                // Load full CustomUserDetails
+                CustomUserDetails userDetails =
+                        (CustomUserDetails) userDetailsService
+                                .loadUserByUsername(email);
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
-                                email,
+                                userDetails,
                                 null,
-                                authorities
+                                userDetails.getAuthorities()
                         );
 
                 authentication.setDetails(
@@ -67,16 +67,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         .setAuthentication(authentication);
 
                 System.out.println(
-                        "SPRING AUTHORITIES → " +
-                                SecurityContextHolder.getContext()
-                                        .getAuthentication()
-                                        .getAuthorities()
+                        "SPRING PRINCIPAL → " +
+                                authentication.getPrincipal().getClass()
                 );
-
             }
-
         }
 
         filterChain.doFilter(request, response);
     }
+
 }
