@@ -36,6 +36,7 @@ public class AdminStatsController {
         response.setTotalBookings(bookingService.getTotalBookings());
         response.setUpcomingSessions(sessionService.getUpcomingSessionCount());
         response.setPastSessions(sessionService.getPastSessionCount());
+        response.setTotalSessions(sessionService.getTotalSessionCount());
 
         return ResponseEntity.ok(response);
     }
