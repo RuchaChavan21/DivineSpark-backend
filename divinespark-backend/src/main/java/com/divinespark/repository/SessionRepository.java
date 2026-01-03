@@ -20,4 +20,5 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
         ORDER BY s.endTime DESC
     """)
     Page<Session> findPastSessions(LocalDateTime now, Pageable pageable);
+    long countByStatus(SessionStatus status);
 }

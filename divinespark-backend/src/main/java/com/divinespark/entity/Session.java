@@ -44,9 +44,11 @@ public class Session {
     @Column(nullable = false)
     private SessionStatus status = SessionStatus.UPCOMING;
 
+    @Convert(converter = AtomicIntegerConverter.class)
     @Column(nullable = false)
     private AtomicInteger maxSeats = new AtomicInteger(0);
 
+    @Convert(converter = AtomicIntegerConverter.class)
     @Column(nullable = false)
     private AtomicInteger availableSeats = new AtomicInteger(0);
 
@@ -214,4 +216,7 @@ public class Session {
     public void setRecordingUrl(String recordingUrl) {
         this.recordingUrl = recordingUrl;
     }
+
 }
+
+

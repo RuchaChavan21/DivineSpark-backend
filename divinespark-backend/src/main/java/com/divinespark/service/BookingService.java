@@ -8,5 +8,5 @@ public interface BookingService {
 
     List<UserBookingResponse> getUserBookings(Long userId);
     void cancelBooking(Long bookingId, Long userId);
-
+    long getTotalBookings();
 }

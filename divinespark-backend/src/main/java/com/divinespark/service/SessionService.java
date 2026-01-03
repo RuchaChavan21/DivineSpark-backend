@@ -36,5 +36,8 @@ public interface SessionService {
 
     Page<Session> getPastSessions(int page, int size);
 
+    long getUpcomingSessionCount();
+
+    long getPastSessionCount();
 
 }
