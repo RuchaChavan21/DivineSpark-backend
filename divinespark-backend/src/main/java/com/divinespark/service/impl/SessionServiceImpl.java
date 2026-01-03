@@ -33,6 +33,7 @@ public class SessionServiceImpl implements SessionService  {
     private final StorageService storageService;
     private final SessionResourceRepository sessionResourceRepository;
     private final ZoomService zoomService;
+    private final SessionRepository sessionRepository;
 
 
     public SessionServiceImpl(
@@ -43,7 +44,7 @@ public class SessionServiceImpl implements SessionService  {
             PaymentRepository paymentRepository,
             StorageService storageService,
             SessionResourceRepository sessionResourceRepository,
-            ZoomService zoomService) {
+            ZoomService zoomService, SessionRepository sessionRepository) {
 
         this.repo = repo;
         this.bookingRepository = bookingRepository;
@@ -53,6 +54,7 @@ public class SessionServiceImpl implements SessionService  {
         this.storageService = storageService;
         this.sessionResourceRepository = sessionResourceRepository;
         this.zoomService = zoomService;
+        this.sessionRepository = sessionRepository;
     }
 
     // ================= ADMIN =================
@@ -330,9 +332,6 @@ public class SessionServiceImpl implements SessionService  {
         return response;
     }
 
-
-
-
     @Override
     public List<AdminSessionUserResponse> getUsersBySession(Long sessionId) {
         return bookingRepository.findUsersBySessionId(sessionId);
@@ -348,6 +347,18 @@ public class SessionServiceImpl implements SessionService  {
                 LocalDateTime.now(),
                 PageRequest.of(page, size)
         );
+    }
+
+    @Override
+    public long getUpcomingSessionCount() {
+        return sessionRepository.countByStatus(SessionStatus.UPCOMING);
+
+    }
+
+    @Override
+    public long getPastSessionCount() {
+        return sessionRepository.countByStatus(SessionStatus.COMPLETED);
+
     }
 
 }

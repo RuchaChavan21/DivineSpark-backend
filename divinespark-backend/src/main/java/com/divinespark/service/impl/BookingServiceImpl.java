@@ -10,19 +10,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
+
 @Service
 public class BookingServiceImpl implements BookingService {
 
-    BookingRepository bookingRepository;
+    private final BookingRepository bookingRepository;
     private final EmailService emailService;
-    public BookingServiceImpl(BookingRepository bookingRepository, EmailService emailService) {
+
+    public BookingServiceImpl(
+            BookingRepository bookingRepository,
+            EmailService emailService) {
         this.bookingRepository = bookingRepository;
         this.emailService = emailService;
     }
 
     @Override
     public List<UserBookingResponse> getUserBookings(Long userId) {
-
 
         List<Booking> bookings =
                 bookingRepository.findUserBookingsWithSession(userId);
@@ -42,12 +45,11 @@ public class BookingServiceImpl implements BookingService {
             dto.setStartTime(session.getStartTime());
             dto.setEndTime(session.getEndTime());
 
-            // Show join link ONLY if allowed
             if (
-                    booking.getStatus().equals("CONFIRMED") &&
-                            session.getStatus().name().equals("UPCOMING")
+                    "CONFIRMED".equals(booking.getStatus()) &&
+                            "UPCOMING".equals(session.getStatus().name())
             ) {
-                if (session.getType().name().equals("FREE")) {
+                if ("FREE".equals(session.getType().name())) {
                     dto.setJoinLink(session.getZoomLink());
                 }
             }
@@ -65,26 +67,23 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
-        // Ensure user owns the booking
         if (!booking.getUser().getId().equals(userId)) {
             throw new RuntimeException("Unauthorized cancellation");
         }
 
-        // Prevent double cancellation
         if ("CANCELLED".equals(booking.getStatus())) {
             throw new RuntimeException("Booking already cancelled");
         }
 
-        // Cancel booking
         booking.setStatus("CANCELLED");
 
-        // Restore seat
         Session session = booking.getSession();
-        session.setAvailableSeats(session.getAvailableSeats().incrementAndGet());
+        session.setAvailableSeats(
+                session.getAvailableSeats().incrementAndGet()
+        );
 
         bookingRepository.save(booking);
 
-        // Send email AFTER successful DB update
         emailService.sendBookingCancelledEmail(
                 booking.getUser().getEmail(),
                 session.getTitle(),
@@ -92,5 +91,8 @@ public class BookingServiceImpl implements BookingService {
         );
     }
 
-
+    @Override
+    public long getTotalBookings() {
+        return bookingRepository.count();
+    }
 }
