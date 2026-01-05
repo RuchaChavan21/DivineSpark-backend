@@ -5,11 +5,8 @@ import com.divinespark.entity.*;
 import com.divinespark.entity.enums.SessionStatus;
 import com.divinespark.entity.enums.SessionType;
 import com.divinespark.repository.*;
-import com.divinespark.service.EmailService;
-import com.divinespark.service.SessionService;
-import com.divinespark.service.StorageService;
+import com.divinespark.service.*;
 
-import com.divinespark.service.ZoomService;
 import com.divinespark.utils.ZoomNameUtil;
 import com.divinespark.utils.ZoomUtils;
 import org.springframework.data.domain.Page;
@@ -34,6 +31,7 @@ public class SessionServiceImpl implements SessionService  {
     private final SessionResourceRepository sessionResourceRepository;
     private final ZoomService zoomService;
     private final SessionRepository sessionRepository;
+    private final RazorpayService razorpayService;
 
 
     public SessionServiceImpl(
@@ -44,7 +42,8 @@ public class SessionServiceImpl implements SessionService  {
             PaymentRepository paymentRepository,
             StorageService storageService,
             SessionResourceRepository sessionResourceRepository,
-            ZoomService zoomService, SessionRepository sessionRepository) {
+            ZoomService zoomService, SessionRepository sessionRepository,
+            RazorpayService razorpayService) {
 
         this.repo = repo;
         this.bookingRepository = bookingRepository;
@@ -55,6 +54,7 @@ public class SessionServiceImpl implements SessionService  {
         this.sessionResourceRepository = sessionResourceRepository;
         this.zoomService = zoomService;
         this.sessionRepository = sessionRepository;
+        this.razorpayService = razorpayService;
     }
 
     // ================= ADMIN =================
@@ -300,7 +300,6 @@ public class SessionServiceImpl implements SessionService  {
             throw new RuntimeException("No seats available");
         }
 
-        //Block ONLY confirmed booking
         if (bookingRepository.existsByUserIdAndSessionIdAndStatus(
                 userId, sessionId, "CONFIRMED")) {
             throw new RuntimeException("Already booked");
@@ -319,18 +318,32 @@ public class SessionServiceImpl implements SessionService  {
                     return bookingRepository.save(b);
                 });
 
+        //CREATE RAZORPAY ORDER
+        RazorpayOrderResponse razorpayOrder =
+                razorpayService.createOrder(session.getPrice(), booking.getId());
+
+        if (razorpayOrder.getOrderId() == null) {
+            throw new RuntimeException("Failed to create Razorpay order");
+        }
+
+        //SAVE PAYMENT WITH ORDER ID
         Payment payment = new Payment();
         payment.setBookingId(booking.getId());
         payment.setAmount(session.getPrice());
+        payment.setGatewayOrderId(razorpayOrder.getOrderId());
         payment.setStatus("CREATED");
         paymentRepository.save(payment);
 
+        // 🔥 RETURN TO FRONTEND
         PaymentInitiateResponse response = new PaymentInitiateResponse();
         response.setBookingId(booking.getId());
-        response.setAmount(session.getPrice());
+        response.setOrderId(razorpayOrder.getOrderId());
+        response.setAmount(session.getPrice() * 100); // paise
+        response.setCurrency("INR");
 
         return response;
     }
+
 
     @Override
     public List<AdminSessionUserResponse> getUsersBySession(Long sessionId) {

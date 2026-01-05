@@ -36,6 +36,7 @@ public class RazorpayServiceImpl implements RazorpayService {
 
             RazorpayOrderResponse response = new RazorpayOrderResponse();
             response.setOrderId(order.get("id"));
+            System.out.println("RAZORPAY ORDER ID => " + order.get("id"));
 
             return response;
 

@@ -36,72 +36,59 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public void handlePaymentCallback(PaymentCallbackRequest req) {
 
-        Payment payment =
-                paymentRepository.findByGatewayOrderId(req.getGatewayOrderId());
+        Payment payment = paymentRepository
+                .findByGatewayOrderId(req.getGatewayOrderId());
 
         if (payment == null) {
             throw new RuntimeException("Invalid payment reference");
         }
 
-        // Idempotency check
-        if ("SUCCESS".equals(payment.getStatus())) {
-            return; // already processed
-        }
-
-        if (!"SUCCESS".equals(req.getPaymentStatus())) {
-            payment.setStatus("FAILED");
-            paymentRepository.save(payment);
+        // Idempotency
+        if ("SUCCESS".equals(payment.getStatus()) ||
+                "FAILED".equals(payment.getStatus())) {
             return;
         }
-
-        // Mark payment success
-        payment.setStatus("SUCCESS");
-        paymentRepository.save(payment);
 
         Booking booking = bookingRepo.findById(payment.getBookingId())
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
+        if (!"PENDING".equals(booking.getStatus())) {
+            return;
+        }
 
-        if (booking == null) {
-            throw new RuntimeException("Booking not found");
+        if (!"SUCCESS".equals(req.getPaymentStatus())) {
+            payment.setStatus("FAILED");
+            booking.setStatus("FAILED");
+            return;
         }
 
         Session session = booking.getSession();
 
         if (session.getAvailableSeats().get() <= 0) {
-            throw new RuntimeException("No seats left");
+            throw new RuntimeException("No seats available");
         }
 
-        // Confirm booking
+        // Mark success
+        payment.setStatus("SUCCESS");
         booking.setStatus("CONFIRMED");
-        bookingRepo.save(booking);
 
-        // Reduce seats
         session.setAvailableSeats(
-                session.getAvailableSeats().decrementAndGet()
+                session.getAvailableSeats().get() - 1
         );
 
         User user = booking.getUser();
 
-        String firstName = ZoomNameUtil.getFirstName(user.getUsername());
-        String lastName = ZoomNameUtil.getLastName();
-
-// Register user to Zoom meeting
         ZoomRegistrationResponse zoomResponse =
                 zoomService.registerUser(
                         session.getZoomMeetingId(),
                         user.getEmail(),
-                        firstName,
-                        lastName
+                        ZoomNameUtil.getFirstName(user.getUsername()),
+                        ZoomNameUtil.getLastName()
                 );
 
-// Save Zoom details in booking
         booking.setZoomRegistrantId(zoomResponse.getRegistrantId());
         booking.setZoomJoinUrl(zoomResponse.getJoinUrl());
-        bookingRepo.save(booking);
 
-
-        // Send PAID session link
         emailService.sendSessionJoinLink(
                 user.getEmail(),
                 session.getTitle(),
@@ -111,8 +98,8 @@ public class PaymentServiceImpl implements PaymentService {
                 session.getEndTime().toString(),
                 "PAID"
         );
-
     }
+
 
     @Transactional
     public void handlePaymentFailure(String gatewayOrderId) {
@@ -155,6 +142,5 @@ public class PaymentServiceImpl implements PaymentService {
         booking.setStatus("CONFIRMED");
         bookingRepo.save(booking);
     }
-
 
 }
