@@ -3,7 +3,7 @@ package com.divinespark.dto;
 public class PaymentCallbackRequest {
 
     private String gatewayOrderId;
-    private String paymentStatus; // SUCCESS / FAILED
+    private String paymentStatus;
 
     public String getGatewayOrderId() {
         return gatewayOrderId;
