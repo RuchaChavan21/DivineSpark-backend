@@ -1,5 +1,6 @@
 package com.divinespark.service.impl;
 
+import com.divinespark.dto.AdminPaymentResponse;
 import com.divinespark.dto.PaymentCallbackRequest;
 import com.divinespark.dto.ZoomRegistrationResponse;
 import com.divinespark.entity.Booking;
@@ -14,6 +15,9 @@ import com.divinespark.service.ZoomService;
 import com.divinespark.utils.ZoomNameUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Service
@@ -142,5 +146,13 @@ public class PaymentServiceImpl implements PaymentService {
         booking.setStatus("CONFIRMED");
         bookingRepo.save(booking);
     }
+
+    @Override
+    public List<AdminPaymentResponse> getAllPaymentsForAdmin() {
+        return paymentRepository.fetchAdminPayments();
+    }
+
+
+
 
 }
