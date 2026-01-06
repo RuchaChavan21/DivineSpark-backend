@@ -152,6 +152,32 @@ public class PaymentServiceImpl implements PaymentService {
         return paymentRepository.fetchAdminPayments();
     }
 
+    @Override
+    @Transactional
+    public void handlePaymentCaptured(String razorpayOrderId, int amount) {
+
+        Payment payment = paymentRepository
+                .findByGatewayOrderId(razorpayOrderId);
+
+        if (payment == null) {
+            throw new RuntimeException("Payment not found");
+        }
+
+        // Idempotency
+        if ("SUCCESS".equals(payment.getStatus())) {
+            return;
+        }
+
+        payment.setStatus("SUCCESS");
+        paymentRepository.save(payment);
+
+        Booking booking = bookingRepo
+                .findById(payment.getBookingId())
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        booking.setStatus("CONFIRMED");
+        bookingRepo.save(booking);
+    }
 
 
 

@@ -1,9 +1,13 @@
 package com.divinespark.utils;
 
+import jakarta.persistence.Column;
+import org.springframework.stereotype.Component;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
 
+@Component
 public class RazorpaySignatureUtil {
 
     private static final String HMAC_SHA256 = "HmacSHA256";
@@ -11,12 +15,12 @@ public class RazorpaySignatureUtil {
     public static boolean verify(
             String payload,
             String actualSignature,
-            String secret) {
+            String webhookSecret) {
 
         try {
             Mac mac = Mac.getInstance(HMAC_SHA256);
             SecretKeySpec key =
-                    new SecretKeySpec(secret.getBytes(), HMAC_SHA256);
+                    new SecretKeySpec(webhookSecret.getBytes(), HMAC_SHA256);
             mac.init(key);
 
             byte[] hash = mac.doFinal(payload.getBytes());
