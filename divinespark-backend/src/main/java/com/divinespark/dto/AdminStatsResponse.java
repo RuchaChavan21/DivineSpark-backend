@@ -16,7 +16,6 @@ public class AdminStatsResponse {
         this.totalSessions = totalSessions;
     }
 
-
     public long getTotalUsers() {
         return totalUsers;
     }

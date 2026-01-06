@@ -41,4 +41,8 @@ public class Payment {
     public void setStatus(String status) { this.status = status; }
     public String getGatewayOrderId() { return gatewayOrderId; }
     public void setGatewayOrderId(String gatewayOrderId) { this.gatewayOrderId = gatewayOrderId; }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 }
