@@ -14,4 +14,6 @@ public interface PaymentService {
 
     List<AdminPaymentResponse> getAllPaymentsForAdmin();
 
+    void handlePaymentCaptured(String razorpayOrderId, int amount);
+
 }
