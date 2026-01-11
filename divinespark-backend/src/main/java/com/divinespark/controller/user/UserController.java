@@ -3,8 +3,6 @@ package com.divinespark.controller.user;
 import com.divinespark.dto.PaymentInitiateResponse;
 import com.divinespark.dto.SessionDetailResponse;
 import com.divinespark.dto.SessionUserListResponse;
-import com.divinespark.entity.User;
-import com.divinespark.repository.UserRepository;
 import com.divinespark.security.CustomUserDetails;
 import com.divinespark.service.SessionService;
 import org.springframework.http.ResponseEntity;

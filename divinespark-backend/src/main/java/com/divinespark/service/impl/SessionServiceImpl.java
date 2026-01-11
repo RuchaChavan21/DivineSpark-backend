@@ -173,7 +173,11 @@ public class SessionServiceImpl implements SessionService  {
                 );
 
         booking.setZoomRegistrantId(zoomResponse.getRegistrantId());
-        booking.setZoomJoinUrl(zoomResponse.getJoinUrl());
+
+        if (zoomResponse.getJoinUrl() != null) {
+            booking.setZoomJoinUrl(zoomResponse.getJoinUrl());
+        }
+
         bookingRepository.save(booking);
 
         session.setAvailableSeats(session.getAvailableSeats().decrementAndGet());
