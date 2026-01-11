@@ -91,7 +91,11 @@ public class PaymentServiceImpl implements PaymentService {
                 );
 
         booking.setZoomRegistrantId(zoomResponse.getRegistrantId());
-        booking.setZoomJoinUrl(zoomResponse.getJoinUrl());
+
+        if (zoomResponse.getJoinUrl() != null) {
+            booking.setZoomJoinUrl(zoomResponse.getJoinUrl());
+        }
+
 
         emailService.sendSessionJoinLink(
                 user.getEmail(),
@@ -178,7 +182,5 @@ public class PaymentServiceImpl implements PaymentService {
         booking.setStatus("CONFIRMED");
         bookingRepo.save(booking);
     }
-
-
 
 }
