@@ -1,7 +1,6 @@
 package com.divinespark.service.impl;
 
 import com.divinespark.dto.AdminPaymentResponse;
-import com.divinespark.dto.PaymentCallbackRequest;
 import com.divinespark.dto.ZoomRegistrationResponse;
 import com.divinespark.entity.Booking;
 import com.divinespark.entity.Payment;
@@ -16,9 +15,7 @@ import com.divinespark.utils.ZoomNameUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
-
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
@@ -28,10 +25,14 @@ public class PaymentServiceImpl implements PaymentService {
     private final EmailService emailService;
     private final ZoomService zoomService;
 
+    public PaymentServiceImpl(
+            PaymentRepository paymentRepository,
+            BookingRepository bookingRepo,
+            EmailService emailService,
+            ZoomService zoomService) {
 
-    public PaymentServiceImpl(PaymentRepository paymentRepository, BookingRepository bookingRepository, EmailService emailService, ZoomService zoomService) {
         this.paymentRepository = paymentRepository;
-        this.bookingRepo = bookingRepository;
+        this.bookingRepo = bookingRepo;
         this.emailService = emailService;
         this.zoomService = zoomService;
     }
@@ -43,7 +44,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .findByGatewayOrderId(gatewayOrderId);
 
         if ("FAILED".equals(payment.getStatus())) {
-            return; // idempotent
+            return;
         }
 
         payment.setStatus("FAILED");
@@ -107,6 +108,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         booking.setStatus("CONFIRMED");
 
+        // Zoom registration for access control (no join_url dependency)
         Session session = booking.getSession();
         User user = booking.getUser();
 
@@ -121,5 +123,4 @@ public class PaymentServiceImpl implements PaymentService {
         booking.setZoomRegistrantId(zoomResponse.getRegistrantId());
         bookingRepo.save(booking);
     }
-
 }
