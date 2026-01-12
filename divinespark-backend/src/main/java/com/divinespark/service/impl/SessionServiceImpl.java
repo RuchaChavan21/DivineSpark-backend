@@ -185,7 +185,8 @@ public class SessionServiceImpl implements SessionService  {
         emailService.sendSessionJoinLink(
                 user.getEmail(),
                 session.getTitle(),
-                booking.getZoomJoinUrl(),
+                //booking.getZoomJoinUrl(),
+                session.getZoomLink(),
                 session.getGuideName(),
                 session.getStartTime().toString(),
                 session.getEndTime().toString(),
@@ -338,7 +339,7 @@ public class SessionServiceImpl implements SessionService  {
         payment.setStatus("CREATED");
         paymentRepository.save(payment);
 
-        // 🔥 RETURN TO FRONTEND
+        // RETURN TO FRONTEND
         PaymentInitiateResponse response = new PaymentInitiateResponse();
         response.setBookingId(booking.getId());
         response.setOrderId(razorpayOrder.getOrderId());

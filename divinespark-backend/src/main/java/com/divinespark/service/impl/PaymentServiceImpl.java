@@ -37,79 +37,6 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Transactional
-    @Override
-    public void handlePaymentCallback(PaymentCallbackRequest req) {
-
-        Payment payment = paymentRepository
-                .findByGatewayOrderId(req.getGatewayOrderId());
-
-        if (payment == null) {
-            throw new RuntimeException("Invalid payment reference");
-        }
-
-        // Idempotency
-        if ("SUCCESS".equals(payment.getStatus()) ||
-                "FAILED".equals(payment.getStatus())) {
-            return;
-        }
-
-        Booking booking = bookingRepo.findById(payment.getBookingId())
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
-
-        if (!"PENDING".equals(booking.getStatus())) {
-            return;
-        }
-
-        if (!"SUCCESS".equals(req.getPaymentStatus())) {
-            payment.setStatus("FAILED");
-            booking.setStatus("FAILED");
-            return;
-        }
-
-        Session session = booking.getSession();
-
-        if (session.getAvailableSeats().get() <= 0) {
-            throw new RuntimeException("No seats available");
-        }
-
-        // Mark success
-        payment.setStatus("SUCCESS");
-        booking.setStatus("CONFIRMED");
-
-        session.setAvailableSeats(
-                session.getAvailableSeats().get() - 1
-        );
-
-        User user = booking.getUser();
-
-        ZoomRegistrationResponse zoomResponse =
-                zoomService.registerUser(
-                        session.getZoomMeetingId(),
-                        user.getEmail(),
-                        ZoomNameUtil.getFirstName(user.getUsername()),
-                        ZoomNameUtil.getLastName()
-                );
-
-        booking.setZoomRegistrantId(zoomResponse.getRegistrantId());
-
-        if (zoomResponse.getJoinUrl() != null) {
-            booking.setZoomJoinUrl(zoomResponse.getJoinUrl());
-        }
-
-
-        emailService.sendSessionJoinLink(
-                user.getEmail(),
-                session.getTitle(),
-                booking.getZoomJoinUrl(),
-                session.getGuideName(),
-                session.getStartTime().toString(),
-                session.getEndTime().toString(),
-                "PAID"
-        );
-    }
-
-
-    @Transactional
     public void handlePaymentFailure(String gatewayOrderId) {
 
         Payment payment = paymentRepository
@@ -167,7 +94,6 @@ public class PaymentServiceImpl implements PaymentService {
             throw new RuntimeException("Payment not found");
         }
 
-        // Idempotency
         if ("SUCCESS".equals(payment.getStatus())) {
             return;
         }
@@ -180,6 +106,19 @@ public class PaymentServiceImpl implements PaymentService {
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
         booking.setStatus("CONFIRMED");
+
+        Session session = booking.getSession();
+        User user = booking.getUser();
+
+        ZoomRegistrationResponse zoomResponse =
+                zoomService.registerUser(
+                        session.getZoomMeetingId(),
+                        user.getEmail(),
+                        ZoomNameUtil.getFirstName(user.getUsername()),
+                        ZoomNameUtil.getLastName()
+                );
+
+        booking.setZoomRegistrantId(zoomResponse.getRegistrantId());
         bookingRepo.save(booking);
     }
 
