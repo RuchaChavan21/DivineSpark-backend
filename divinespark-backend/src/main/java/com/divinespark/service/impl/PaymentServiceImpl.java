@@ -86,7 +86,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional
-    public void handlePaymentCaptured(String razorpayOrderId, int amount) {
+    public boolean handlePaymentCaptured(String razorpayOrderId, int amount) {
 
         Payment payment = paymentRepository
                 .findByGatewayOrderId(razorpayOrderId);
@@ -96,7 +96,7 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         if ("SUCCESS".equals(payment.getStatus())) {
-            return;
+            return false;
         }
 
         payment.setStatus("SUCCESS");
@@ -123,5 +123,6 @@ public class PaymentServiceImpl implements PaymentService {
         booking.setZoomRegistrantId(zoomResponse.getRegistrantId());
         booking.setZoomJoinUrl(zoomResponse.getJoinUrl());
         bookingRepo.save(booking);
+        return false;
     }
 }

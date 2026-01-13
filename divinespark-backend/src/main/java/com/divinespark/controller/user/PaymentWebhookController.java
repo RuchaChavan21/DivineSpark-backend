@@ -1,5 +1,6 @@
 package com.divinespark.controller.user;
 
+import com.divinespark.service.DonationService;
 import com.divinespark.service.PaymentService;
 import com.divinespark.utils.RazorpaySignatureUtil;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -11,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-
 @RestController
 @RequestMapping("/api/v1/payments")
 public class PaymentWebhookController {
@@ -20,6 +20,7 @@ public class PaymentWebhookController {
             LoggerFactory.getLogger(PaymentWebhookController.class);
 
     private final PaymentService paymentService;
+    private final DonationService donationService;
     private final ObjectMapper objectMapper;
     private final RazorpaySignatureUtil razorpaySignatureUtil;
 
@@ -28,9 +29,12 @@ public class PaymentWebhookController {
 
     public PaymentWebhookController(
             PaymentService paymentService,
+            DonationService donationService,
             ObjectMapper objectMapper,
             RazorpaySignatureUtil razorpaySignatureUtil) {
+
         this.paymentService = paymentService;
+        this.donationService = donationService;
         this.objectMapper = objectMapper;
         this.razorpaySignatureUtil = razorpaySignatureUtil;
     }
@@ -39,7 +43,6 @@ public class PaymentWebhookController {
     public ResponseEntity<Void> handleWebhook(
             @RequestBody String payload,
             @RequestHeader("X-Razorpay-Signature") String signature) {
-
 
         try {
             razorpaySignatureUtil.verify(payload, signature, webhookSecret);
@@ -61,15 +64,19 @@ public class PaymentWebhookController {
                 String orderId = payment.get("order_id").asText();
                 int amount = payment.get("amount").asInt();
 
-                paymentService.handlePaymentCaptured(orderId, amount);
+                boolean handled =
+                        paymentService.handlePaymentCaptured(orderId, amount);
+
+                if (!handled) {
+                    donationService.handleDonationCaptured(orderId, amount);
+                }
             }
 
         } catch (Exception e) {
+            log.error("Webhook processing failed", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
         return ResponseEntity.ok().build();
     }
-
-
 }
