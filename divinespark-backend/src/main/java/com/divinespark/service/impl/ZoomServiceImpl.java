@@ -4,6 +4,7 @@ import com.divinespark.dto.ZoomRegistrationResponse;
 import com.divinespark.service.ZoomAuthService;
 import com.divinespark.service.ZoomService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -17,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
+@ConditionalOnProperty(name = "zoom.mode", havingValue = "PAID")
 public class ZoomServiceImpl implements ZoomService {
 
     private static final Logger log =

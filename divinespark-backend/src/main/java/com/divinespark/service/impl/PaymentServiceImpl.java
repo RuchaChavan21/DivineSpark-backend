@@ -121,6 +121,7 @@ public class PaymentServiceImpl implements PaymentService {
                 );
 
         booking.setZoomRegistrantId(zoomResponse.getRegistrantId());
+        booking.setZoomJoinUrl(zoomResponse.getJoinUrl());
         bookingRepo.save(booking);
     }
 }
