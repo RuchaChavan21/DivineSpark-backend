@@ -34,10 +34,14 @@ public class AuthService {
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
+                .contactNumber(request.getContactNumber())
                 .role(Role.USER)
                 .isActive(true)
                 .build();
 
+        if (!request.getContactNumber().matches("^[6-9]\\d{9}$")) {
+            throw new RuntimeException("Invalid contact number");
+        }
         userRepository.save(user);
     }
 

@@ -31,6 +31,9 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(nullable = false, length = 15)
+    private String contactNumber;
+
     public User() {
     }
 
@@ -40,7 +43,8 @@ public class User {
                 String password,
                 Role role,
                 boolean isActive,
-                LocalDateTime createdAt) {
+                LocalDateTime createdAt,
+                String contactNumber) {
         this.id = id;
         this.username = username;
         this.email = email;
@@ -48,6 +52,7 @@ public class User {
         this.role = role;
         this.isActive = isActive;
         this.createdAt = createdAt;
+        this.contactNumber = contactNumber;
     }
 
     public Long getId() {
@@ -106,6 +111,14 @@ public class User {
         this.createdAt = createdAt;
     }
 
+    public String getContactNumber() {
+        return contactNumber;
+    }
+
+    public void setContactNumber(String contactNumber) {
+        this.contactNumber = contactNumber;
+    }
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -120,6 +133,7 @@ public class User {
         private String username;
         private String email;
         private String password;
+        private String contactNumber;
         private Role role;
         private boolean isActive = true;
 
@@ -138,6 +152,11 @@ public class User {
             return this;
         }
 
+        public UserBuilder contactNumber(String contactNumber) {
+            this.contactNumber = contactNumber;
+            return this;
+        }
+
         public UserBuilder role(Role role) {
             this.role = role;
             return this;
@@ -153,6 +172,7 @@ public class User {
             user.setUsername(this.username);
             user.setEmail(this.email);
             user.setPassword(this.password);
+            user.setContactNumber(this.contactNumber);
             user.setRole(this.role);
             user.setActive(this.isActive);
             return user;

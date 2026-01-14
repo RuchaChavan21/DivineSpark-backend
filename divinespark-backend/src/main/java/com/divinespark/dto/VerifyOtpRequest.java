@@ -15,7 +15,6 @@ public class VerifyOtpRequest {
     @NotNull
     private OtpPurpose purpose;
 
-    @NotNull
     private Role role;
 
     public String getEmail() { return email; }

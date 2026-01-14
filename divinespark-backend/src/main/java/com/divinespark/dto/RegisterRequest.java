@@ -15,6 +15,9 @@ public class RegisterRequest {
     @NotBlank
     private String password;
 
+    @NotBlank
+    private String contactNumber;
+
     public String getUsername() {
         return username;
     }
@@ -38,4 +41,9 @@ public class RegisterRequest {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    public String getContactNumber() {return contactNumber;}
+
+    public void setContactNumber(String contactNumber) {this.contactNumber = contactNumber;}
+
 }

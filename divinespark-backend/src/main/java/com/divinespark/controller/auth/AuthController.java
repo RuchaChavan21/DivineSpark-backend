@@ -49,21 +49,26 @@ public class AuthController {
                 request.getPurpose()
         );
 
-        String token = jwtUtil.generateToken(request.getEmail(), request.getRole().name());
+        String token = jwtUtil.generateToken(request.getEmail(), "USER");
 
         return ResponseEntity.ok(Map.of("token", token));
     }
 
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(
+    public ResponseEntity<Map<String, String>> register(
             @Valid @RequestBody RegisterRequest request) {
 
         authService.register(request);
-        return ResponseEntity.ok(
-                new AuthResponse("User registered successfully")
+
+        String token = jwtUtil.generateToken(
+                request.getEmail(),
+                "USER"
         );
+
+        return ResponseEntity.ok(Map.of("token", token));
     }
+
 
     @PostMapping("/login")
     public ResponseEntity<?> login(
