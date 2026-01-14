@@ -9,6 +9,7 @@ public class UserProfileResponse {
     private String email;
     private String role;
     private LocalDateTime createdAt;
+    private String contactNumber;
 
     public Long getId() {
         return id;
@@ -49,5 +50,8 @@ public class UserProfileResponse {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
+    public String getContactNumber() {return contactNumber;}
+    public void setContactNumber(String contactNumber) {this.contactNumber = contactNumber;}
 }
 

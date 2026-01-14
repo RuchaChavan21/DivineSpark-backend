@@ -1,9 +1,6 @@
 package com.divinespark.controller.user;
 
-import com.divinespark.dto.PaymentInitiateResponse;
-import com.divinespark.dto.SessionDetailResponse;
-import com.divinespark.dto.SessionUserListResponse;
-import com.divinespark.dto.UserProfileResponse;
+import com.divinespark.dto.*;
 import com.divinespark.security.CustomUserDetails;
 import com.divinespark.service.SessionService;
 import com.divinespark.service.UserService;
@@ -15,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/sessions")
+@RequestMapping("/api/v1")
 public class UserController {
 
     private final SessionService sessionService;
@@ -26,7 +23,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping
+    @GetMapping("/sessions")
     public ResponseEntity<SessionUserListResponse> getSessions(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -37,7 +34,7 @@ public class UserController {
         );
     }
 
-    @GetMapping("/{sessionId}")
+    @GetMapping("/sessions/{sessionId}")
     public ResponseEntity<SessionDetailResponse> getSessionDetails(
             @PathVariable Long sessionId) {
 
@@ -47,7 +44,7 @@ public class UserController {
     }
 
     @PreAuthorize("hasRole('USER')")
-    @PostMapping("/{sessionId}/join")
+    @PostMapping("/sessions/{sessionId}/join")
     public ResponseEntity<?> joinFreeSession(
             @PathVariable Long sessionId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -59,7 +56,7 @@ public class UserController {
     }
 
     @PreAuthorize("hasRole('USER')")
-    @PostMapping("/{sessionId}/pay")
+    @PostMapping("/sessions/{sessionId}/pay")
     public ResponseEntity<PaymentInitiateResponse> initiatePayment(
             @PathVariable Long sessionId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -70,13 +67,24 @@ public class UserController {
         );
     }
 
-    @PreAuthorize("hasRole('USER')")
     @GetMapping("/profile")
     public ResponseEntity<UserProfileResponse> getMyProfile(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         return ResponseEntity.ok(
                 userService.getUserProfile(userDetails.getId())
+        );
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateProfile(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody UpdateProfileRequest request) {
+
+        userService.updateProfile(userDetails.getId(), request);
+        return ResponseEntity.ok(
+                Map.of("message", "Profile updated successfully")
         );
     }
 

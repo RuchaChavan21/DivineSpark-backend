@@ -1,6 +1,4 @@
 package com.divinespark.service;
-
-
 import com.divinespark.dto.LoginRequest;
 import com.divinespark.dto.RegisterRequest;
 import com.divinespark.entity.enums.Role;
