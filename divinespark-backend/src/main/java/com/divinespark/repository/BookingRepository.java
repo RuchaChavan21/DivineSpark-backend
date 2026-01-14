@@ -35,7 +35,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     SELECT new com.divinespark.dto.AdminSessionUserResponse(
         u.id,
         u.email,
-        b.status
+        b.status,
+        u.username,
+        u.contactNumber
     )
     FROM Booking b
     JOIN b.user u
@@ -44,6 +46,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<AdminSessionUserResponse> findUsersBySessionId(
             @Param("sessionId") Long sessionId
     );
+
 
     @Query("""
     SELECT new com.divinespark.dto.AdminSessionBookingResponse(
@@ -80,6 +83,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             Long sessionId,
             String status
     );
+
 
 
 }

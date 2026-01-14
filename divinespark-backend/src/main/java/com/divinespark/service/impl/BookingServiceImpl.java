@@ -1,13 +1,17 @@
 package com.divinespark.service.impl;
 
+import com.divinespark.dto.AdminSessionUserResponse;
 import com.divinespark.dto.UserBookingResponse;
 import com.divinespark.entity.Booking;
 import com.divinespark.entity.Session;
 import com.divinespark.repository.BookingRepository;
 import com.divinespark.service.BookingService;
 import com.divinespark.service.EmailService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -94,4 +98,35 @@ public class BookingServiceImpl implements BookingService {
     public long getTotalBookings() {
         return bookingRepository.count();
     }
+
+    @Override
+    public void downloadSessionUsers(Long sessionId, HttpServletResponse response) {
+
+        List<AdminSessionUserResponse> users =
+                bookingRepository.findUsersBySessionId(sessionId);
+
+        response.setContentType("text/csv");
+        response.setHeader(
+                "Content-Disposition",
+                "attachment; filename=session-" + sessionId + "-users.csv"
+        );
+
+        try (PrintWriter writer = response.getWriter()) {
+
+            writer.println("Username,Email,Contact Number,Booking Status");
+
+            for (AdminSessionUserResponse u : users) {
+                writer.println(
+                        u.getUsername() + "," +
+                                u.getEmail() + "," +
+                                u.getContactNumber() + "," +
+                                u.getBookingStatus()
+                );
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to download users");
+        }
+    }
+
 }
