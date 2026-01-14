@@ -3,8 +3,10 @@ package com.divinespark.controller.user;
 import com.divinespark.dto.PaymentInitiateResponse;
 import com.divinespark.dto.SessionDetailResponse;
 import com.divinespark.dto.SessionUserListResponse;
+import com.divinespark.dto.UserProfileResponse;
 import com.divinespark.security.CustomUserDetails;
 import com.divinespark.service.SessionService;
+import com.divinespark.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,9 +19,11 @@ import java.util.Map;
 public class UserController {
 
     private final SessionService sessionService;
+    private final UserService userService;
 
-    public UserController(SessionService sessionService) {
+    public UserController(SessionService sessionService, UserService userService) {
         this.sessionService = sessionService;
+        this.userService = userService;
     }
 
     @GetMapping
@@ -65,4 +69,17 @@ public class UserController {
                         sessionId, userDetails.getId())
         );
     }
+
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/profile")
+    public ResponseEntity<UserProfileResponse> getMyProfile(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        return ResponseEntity.ok(
+                userService.getUserProfile(userDetails.getId())
+        );
+    }
+
+
+
 }
