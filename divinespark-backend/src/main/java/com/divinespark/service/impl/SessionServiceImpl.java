@@ -7,8 +7,6 @@ import com.divinespark.entity.enums.SessionType;
 import com.divinespark.repository.*;
 import com.divinespark.service.*;
 
-import com.divinespark.utils.ZoomNameUtil;
-import com.divinespark.utils.ZoomUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -29,7 +27,6 @@ public class SessionServiceImpl implements SessionService  {
     private final PaymentRepository paymentRepository;
     private final StorageService storageService;
     private final SessionResourceRepository sessionResourceRepository;
-    private final ZoomService zoomService;
     private final SessionRepository sessionRepository;
     private final RazorpayService razorpayService;
 
@@ -40,9 +37,9 @@ public class SessionServiceImpl implements SessionService  {
             UserRepository userRepo,
             EmailService emailService,
             PaymentRepository paymentRepository,
+            SessionRepository sessionRepository,
             StorageService storageService,
             SessionResourceRepository sessionResourceRepository,
-            ZoomService zoomService, SessionRepository sessionRepository,
             RazorpayService razorpayService) {
 
         this.repo = repo;
@@ -52,7 +49,6 @@ public class SessionServiceImpl implements SessionService  {
         this.paymentRepository = paymentRepository;
         this.storageService = storageService;
         this.sessionResourceRepository = sessionResourceRepository;
-        this.zoomService = zoomService;
         this.sessionRepository = sessionRepository;
         this.razorpayService = razorpayService;
     }
@@ -66,12 +62,11 @@ public class SessionServiceImpl implements SessionService  {
         s.setDescription(req.getDescription());
         s.setType(req.getType());
         s.setPrice(req.getPrice());
-        s.setZoomLink(req.getZoomLink());
+        s.setWhatsLink(req.getZoomLink());
         s.setStartTime(req.getStartTime());
         s.setEndTime(req.getEndTime());
         s.setMaxSeats(req.getMaxSeats());
         s.setGuideName(req.getGuideName());
-        s.setZoomMeetingId(ZoomUtils.extractMeetingId(req.getZoomLink()));
         return repo.save(s);
     }
 
@@ -84,7 +79,7 @@ public class SessionServiceImpl implements SessionService  {
         if (req.getDescription() != null) s.setDescription(req.getDescription());
         if (req.getType() != null) s.setType(req.getType());
         if (req.getPrice() != null) s.setPrice(req.getPrice());
-        if (req.getZoomLink() != null) s.setZoomLink(req.getZoomLink());
+        if (req.getZoomLink() != null) s.setWhatsLink(req.getZoomLink());
         if (req.getStartTime() != null) s.setStartTime(req.getStartTime());
         if (req.getEndTime() != null) s.setEndTime(req.getEndTime());
         if (req.getMaxSeats() != null) {
@@ -161,37 +156,10 @@ public class SessionServiceImpl implements SessionService  {
         booking.setStatus("CONFIRMED");
         bookingRepository.save(booking);
 
-        String firstName = ZoomNameUtil.getFirstName(user.getUsername());
-        String lastName = ZoomNameUtil.getLastName();
-
-        ZoomRegistrationResponse zoomResponse =
-                zoomService.registerUser(
-                        session.getZoomMeetingId(),
-                        user.getEmail(),
-                        firstName,
-                        lastName
-                );
-
-        booking.setZoomRegistrantId(zoomResponse.getRegistrantId());
-
-        if (zoomResponse.getJoinUrl() != null) {
-            booking.setZoomJoinUrl(zoomResponse.getJoinUrl());
-        }
 
         bookingRepository.save(booking);
 
         session.setAvailableSeats(session.getAvailableSeats().decrementAndGet());
-
-        emailService.sendSessionJoinLink(
-                user.getEmail(),
-                session.getTitle(),
-                //booking.getZoomJoinUrl(),
-                session.getZoomLink(),
-                session.getGuideName(),
-                session.getStartTime().toString(),
-                session.getEndTime().toString(),
-                "FREE"
-        );
 
     }
 

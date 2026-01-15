@@ -1,7 +1,6 @@
 package com.divinespark.service.impl;
 
 import com.divinespark.dto.AdminPaymentResponse;
-import com.divinespark.dto.ZoomRegistrationResponse;
 import com.divinespark.entity.Booking;
 import com.divinespark.entity.Payment;
 import com.divinespark.entity.Session;
@@ -10,8 +9,6 @@ import com.divinespark.repository.BookingRepository;
 import com.divinespark.repository.PaymentRepository;
 import com.divinespark.service.EmailService;
 import com.divinespark.service.PaymentService;
-import com.divinespark.service.ZoomService;
-import com.divinespark.utils.ZoomNameUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,18 +20,15 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final BookingRepository bookingRepo;
     private final EmailService emailService;
-    private final ZoomService zoomService;
 
     public PaymentServiceImpl(
             PaymentRepository paymentRepository,
             BookingRepository bookingRepo,
-            EmailService emailService,
-            ZoomService zoomService) {
+            EmailService emailService) {
 
         this.paymentRepository = paymentRepository;
         this.bookingRepo = bookingRepo;
         this.emailService = emailService;
-        this.zoomService = zoomService;
     }
 
     @Transactional
@@ -112,16 +106,6 @@ public class PaymentServiceImpl implements PaymentService {
         Session session = booking.getSession();
         User user = booking.getUser();
 
-        ZoomRegistrationResponse zoomResponse =
-                zoomService.registerUser(
-                        session.getZoomMeetingId(),
-                        user.getEmail(),
-                        ZoomNameUtil.getFirstName(user.getUsername()),
-                        ZoomNameUtil.getLastName()
-                );
-
-        booking.setZoomRegistrantId(zoomResponse.getRegistrantId());
-        booking.setZoomJoinUrl(zoomResponse.getJoinUrl());
         bookingRepo.save(booking);
         return false;
     }

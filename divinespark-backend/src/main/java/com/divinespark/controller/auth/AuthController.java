@@ -27,7 +27,7 @@ public class AuthController {
         this.jwtUtil = jwtUtil;
     }
 
-    // ================= REQUEST OTP =================
+
     @PostMapping("/request-otp")
     public ResponseEntity<?> requestOtp(
             @Valid @RequestBody RequestOtpRequest request) {
@@ -39,7 +39,6 @@ public class AuthController {
                 Map.of("message", "OTP sent"));
     }
 
-    // ================= VERIFY OTP =================
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyOtp(
             @Valid @RequestBody VerifyOtpRequest request) {

@@ -9,7 +9,7 @@ public class SessionUpdateRequest {
     private String description;
     private SessionType type;
     private Double price;
-    private String zoomLink;
+    private String whatsLink;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private Integer maxSeats;
@@ -54,11 +54,11 @@ public class SessionUpdateRequest {
     }
 
     public String getZoomLink() {
-        return zoomLink;
+        return whatsLink;
     }
 
-    public void setZoomLink(String zoomLink) {
-        this.zoomLink = zoomLink;
+    public void setZoomLink(String whatsLink) {
+        this.whatsLink = whatsLink;
     }
 
     public LocalDateTime getStartTime() {
