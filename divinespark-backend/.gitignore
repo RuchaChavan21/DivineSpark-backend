@@ -34,3 +34,11 @@ build/
 
 src/main/resources/application*.properties
 src/main/resources/application.properties
+
+# Spring Boot config (DO NOT COMMIT)
+src/main/resources/application.properties
+src/main/resources/application-*.properties
+*.dev
+*.env
+
+notepad .gitignore
