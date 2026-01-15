@@ -10,7 +10,7 @@ public class SessionCreateRequest {
     private String description;
     private SessionType type;
     private double price;
-    private String whatsappLink;
+    private String whatsappGroupLink;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private int maxSeats;
@@ -55,12 +55,12 @@ public class SessionCreateRequest {
         this.price = price;
     }
 
-    public String getWhatsappLink() {
-        return whatsappLink;
+    public String getWhatsappGroupLink() {
+        return whatsappGroupLink;
     }
 
-    public void setWhatsappLink(String whatsappLink) {
-        this.whatsappLink = whatsappLink;
+    public void setWhatsappGroupLink(String whatsappLink) {
+        this.whatsappGroupLink = whatsappLink;
     }
 
     public LocalDateTime getStartTime() {
