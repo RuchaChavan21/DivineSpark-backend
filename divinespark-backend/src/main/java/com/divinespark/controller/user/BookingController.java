@@ -1,8 +1,11 @@
 package com.divinespark.controller.user;
 
+import com.divinespark.dto.ReviewCreateRequest;
 import com.divinespark.dto.UserBookingResponse;
 import com.divinespark.security.CustomUserDetails;
 import com.divinespark.service.BookingService;
+import com.divinespark.service.ReviewService;
+import com.divinespark.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -16,9 +19,11 @@ import java.util.List;
 public class BookingController {
 
     private final BookingService bookingService;
+    private final ReviewService reviewService;
 
-    public BookingController(BookingService bookingService) {
+    public BookingController(BookingService bookingService, ReviewService reviewService) {
         this.bookingService = bookingService;
+        this.reviewService = reviewService;
     }
 
     @GetMapping
@@ -42,6 +47,21 @@ public class BookingController {
         bookingService.cancelBooking(bookingId, userDetails.getId());
 
         return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasRole('USER')")
+    @PostMapping("/{bookingId}/review")
+    public ResponseEntity<Void> submitReview(
+            @PathVariable Long bookingId,
+            @RequestBody ReviewCreateRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        reviewService.submitReview(
+                bookingId,
+                userDetails.getId(),
+                request
+        );
+        return ResponseEntity.ok().build();
     }
 
 
