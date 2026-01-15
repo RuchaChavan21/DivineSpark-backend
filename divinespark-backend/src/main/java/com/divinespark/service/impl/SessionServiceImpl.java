@@ -6,8 +6,8 @@ import com.divinespark.entity.enums.SessionStatus;
 import com.divinespark.entity.enums.SessionType;
 import com.divinespark.repository.*;
 import com.divinespark.service.*;
-
 import com.divinespark.utils.ValidationUtil;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -30,7 +30,6 @@ public class SessionServiceImpl implements SessionService  {
     private final SessionResourceRepository sessionResourceRepository;
     private final SessionRepository sessionRepository;
     private final RazorpayService razorpayService;
-
 
     public SessionServiceImpl(
             SessionRepository repo,
@@ -61,10 +60,10 @@ public class SessionServiceImpl implements SessionService  {
 
         // If session is UPCOMING, whatsapp link must be present + valid
         if (req.getStatus() == SessionStatus.UPCOMING) {
-            if (ValidationUtil.isBlank(req.getWhatsappLink())) {
+            if (ValidationUtil.isBlank(req.getWhatsappGroupLink())) {
                 throw new RuntimeException("WhatsApp group link is required for UPCOMING sessions");
             }
-            if (!ValidationUtil.isValidWhatsAppGroupLink(req.getWhatsappLink())) {
+            if (!ValidationUtil.isValidWhatsAppGroupLink(req.getWhatsappGroupLink())) {
                 throw new RuntimeException("Invalid WhatsApp group link");
             }
         }
@@ -74,17 +73,18 @@ public class SessionServiceImpl implements SessionService  {
         s.setDescription(req.getDescription());
         s.setType(req.getType());
         s.setPrice(req.getPrice());
+
+        // WhatsApp link 
+        s.setWhatsLink(req.getWhatsappGroupLink());
+
         s.setStartTime(req.getStartTime());
         s.setEndTime(req.getEndTime());
         s.setMaxSeats(req.getMaxSeats());
         s.setGuideName(req.getGuideName());
         s.setStatus(req.getStatus());
 
-        s.setWhatsLink(req.getWhatsappLink());
-
         return repo.save(s);
     }
-
 
     @Override
     public Session update(Long id, SessionUpdateRequest req) {
@@ -104,10 +104,9 @@ public class SessionServiceImpl implements SessionService  {
         }
         if (req.getGuideName() != null) s.setGuideName(req.getGuideName());
 
-        // Update whatsapp link if provided (even if empty string – we handle below)
-        if (req.getWhatsappLink() != null) {
-            String link = req.getWhatsappLink().trim();
-            s.setWhatsLink(link);
+        // Update whatsapp link if provided (even if empty string – we validate below)
+        if (req.getWhatsappGroupLink() != null) {
+            s.setWhatsLink(req.getWhatsappGroupLink().trim());
         }
 
         // Update status last
@@ -128,7 +127,6 @@ public class SessionServiceImpl implements SessionService  {
         return repo.save(s);
     }
 
-
     @Override
     public void delete(Long id) {
         if (!repo.existsById(id)) {
@@ -139,7 +137,6 @@ public class SessionServiceImpl implements SessionService  {
 
     @Override
     public void updateStatus(Long sessionId, String status) {
-
         Session session = repo.findById(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
 
@@ -164,7 +161,6 @@ public class SessionServiceImpl implements SessionService  {
     @Override
     @Transactional
     public void joinFreeSession(Long sessionId, Long userId) {
-
         Session session = repo.findById(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
 
@@ -194,17 +190,11 @@ public class SessionServiceImpl implements SessionService  {
         booking.setStatus("CONFIRMED");
         bookingRepository.save(booking);
 
-
-        bookingRepository.save(booking);
-
         session.setAvailableSeats(session.getAvailableSeats().decrementAndGet());
-
     }
-
 
     @Override
     public void uploadResource(Long sessionId, String fileType, MultipartFile file) {
-
         Session session = repo.findById(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
 
@@ -219,7 +209,6 @@ public class SessionServiceImpl implements SessionService  {
         sessionResourceRepository.save(resource);
     }
 
-
     @Override
     public Page<Session> getAll(int page, int size) {
         return repo.findAll(PageRequest.of(page, size));
@@ -228,7 +217,6 @@ public class SessionServiceImpl implements SessionService  {
     @Override
     @Transactional(readOnly = true)
     public SessionUserListResponse getUpcomingSessions(int page, int size, String type) {
-
         PageRequest pageRequest = PageRequest.of(page, size);
 
         Page<Session> sessions;
@@ -271,11 +259,9 @@ public class SessionServiceImpl implements SessionService  {
         return response;
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public SessionDetailResponse getSessionDetails(Long sessionId) {
-
         Session session = repo.findById(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
 
@@ -295,11 +281,9 @@ public class SessionServiceImpl implements SessionService  {
         return response;
     }
 
-
     @Override
     @Transactional
     public PaymentInitiateResponse initiatePaidSession(Long sessionId, Long userId) {
-
         Session session = repo.findById(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
 
@@ -329,7 +313,6 @@ public class SessionServiceImpl implements SessionService  {
                     return bookingRepository.save(b);
                 });
 
-        //CREATE RAZORPAY ORDER
         RazorpayOrderResponse razorpayOrder =
                 razorpayService.createOrder(session.getPrice(), booking.getId());
 
@@ -337,7 +320,6 @@ public class SessionServiceImpl implements SessionService  {
             throw new RuntimeException("Failed to create Razorpay order");
         }
 
-        //SAVE PAYMENT WITH ORDER ID
         Payment payment = new Payment();
         payment.setBookingId(booking.getId());
         payment.setAmount(session.getPrice());
@@ -345,16 +327,14 @@ public class SessionServiceImpl implements SessionService  {
         payment.setStatus("CREATED");
         paymentRepository.save(payment);
 
-        // RETURN TO FRONTEND
         PaymentInitiateResponse response = new PaymentInitiateResponse();
         response.setBookingId(booking.getId());
         response.setOrderId(razorpayOrder.getOrderId());
-        response.setAmount(session.getPrice() * 100); // paise
+        response.setAmount(session.getPrice() * 100);
         response.setCurrency("INR");
 
         return response;
     }
-
 
     @Override
     public List<AdminSessionUserResponse> getUsersBySession(Long sessionId) {
@@ -365,6 +345,7 @@ public class SessionServiceImpl implements SessionService  {
     public List<AdminSessionBookingResponse> getBookingsBySession(Long sessionId) {
         return bookingRepository.findBookingsBySessionId(sessionId);
     }
+
     @Override
     public Page<Session> getPastSessions(int page, int size) {
         return repo.findPastSessions(
@@ -376,18 +357,15 @@ public class SessionServiceImpl implements SessionService  {
     @Override
     public long getUpcomingSessionCount() {
         return sessionRepository.countByStatus(SessionStatus.UPCOMING);
-
     }
 
     @Override
     public long getPastSessionCount() {
         return sessionRepository.countByStatus(SessionStatus.COMPLETED);
-
     }
+
     @Override
     public long getTotalSessionCount() {
         return sessionRepository.count();
     }
-
-
 }

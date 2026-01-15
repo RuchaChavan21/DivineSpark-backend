@@ -11,7 +11,10 @@ public class SessionUpdateRequest {
     private String description;
     private SessionType type;
     private Double price;
-    private String whatsappLink;
+
+    // WhatsApp group link 
+    private String whatsappGroupLink;
+
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private Integer maxSeats;
@@ -56,12 +59,12 @@ public class SessionUpdateRequest {
         this.price = price;
     }
 
-    public String getWhatsappLink() {
-        return whatsappLink;
+    public String getWhatsappGroupLink() {
+        return whatsappGroupLink;
     }
 
-    public void setWhatsappLink(String whatsappLink) {
-        this.whatsappLink = whatsappLink;
+    public void setWhatsappGroupLink(String whatsappGroupLink) {
+        this.whatsappGroupLink = whatsappGroupLink;
     }
 
     public LocalDateTime getStartTime() {
