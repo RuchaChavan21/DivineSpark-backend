@@ -3,7 +3,9 @@ package com.divinespark.controller.admin;
 import com.divinespark.dto.*;
 
 import com.divinespark.entity.Session;
+import com.divinespark.service.BookingService;
 import com.divinespark.service.SessionService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,9 +20,11 @@ import java.util.List;
 public class AdminSessionController {
 
     private final SessionService sessionService;
+    private final BookingService bookingService;
 
-    public AdminSessionController(SessionService sessionService) {
+    public AdminSessionController(SessionService sessionService, BookingService bookingService) {
         this.sessionService = sessionService;
+        this.bookingService = bookingService;
     }
 
     //@PreAuthorize("hasRole('ADMIN')")
@@ -123,5 +127,15 @@ public class AdminSessionController {
 
         return ResponseEntity.ok(response);
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{sessionId}/users/download")
+    public void downloadUsers(
+            @PathVariable Long sessionId,
+            HttpServletResponse response) {
+
+        bookingService.downloadSessionUsers(sessionId, response);
+    }
+
 
 }

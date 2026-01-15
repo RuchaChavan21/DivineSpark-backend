@@ -1,11 +1,10 @@
 package com.divinespark.controller.auth;
 
-
 import com.divinespark.dto.*;
 import com.divinespark.entity.enums.OtpPurpose;
+import com.divinespark.service.AuthService;
 import com.divinespark.service.OtpService;
 import com.divinespark.utils.JwtUtil;
-import com.divinespark.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,28 +16,30 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
-    private final JwtUtil jwtUtil;
     private final OtpService otpService;
+    private final JwtUtil jwtUtil;
 
-    public AuthController(AuthService authService, JwtUtil jwtUtil, OtpService otpService) {
+    public AuthController(AuthService authService,
+                          OtpService otpService,
+                          JwtUtil jwtUtil) {
         this.authService = authService;
-        this.jwtUtil = jwtUtil;
         this.otpService = otpService;
+        this.jwtUtil = jwtUtil;
     }
 
+    // ================= REQUEST OTP =================
     @PostMapping("/request-otp")
     public ResponseEntity<?> requestOtp(
             @Valid @RequestBody RequestOtpRequest request) {
 
         otpService.generateAndSendOtp(
-                request.getEmail(),
-                request.getPurpose()
-        );
+                request.getEmail(), request.getPurpose());
 
-        return ResponseEntity.ok("OTP sent successfully");
+        return ResponseEntity.ok(
+                Map.of("message", "OTP sent"));
     }
 
-
+    // ================= VERIFY OTP =================
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyOtp(
             @Valid @RequestBody VerifyOtpRequest request) {
@@ -49,34 +50,53 @@ public class AuthController {
                 request.getPurpose()
         );
 
-        String token = jwtUtil.generateToken(request.getEmail(), "USER");
+        if (request.getPurpose() == OtpPurpose.VERIFY_EMAIL) {
+            String token =
+                    jwtUtil.generateToken(
+                            request.getEmail(), "USER");
+            return ResponseEntity.ok(
+                    Map.of("token", token));
+        }
 
-        return ResponseEntity.ok(Map.of("token", token));
+        return ResponseEntity.ok(
+                Map.of("message", "OTP verified"));
     }
 
+    // ================= RESET PASSWORD =================
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request) {
 
+        authService.resetPassword(
+                request.getEmail(),
+                request.getOtp(),
+                request.getNewPassword()
+        );
+
+        return ResponseEntity.ok(
+                Map.of("message", "Password reset successful"));
+    }
+
+    // ================= REGISTER =================
     @PostMapping("/register")
-    public ResponseEntity<Map<String, String>> register(
+    public ResponseEntity<?> register(
             @Valid @RequestBody RegisterRequest request) {
 
         authService.register(request);
 
         String token = jwtUtil.generateToken(
-                request.getEmail(),
-                "USER"
-        );
+                request.getEmail(), "USER");
 
-        return ResponseEntity.ok(Map.of("token", token));
+        return ResponseEntity.ok(
+                Map.of("token", token));
     }
 
-
+    // ================= LOGIN =================
     @PostMapping("/login")
     public ResponseEntity<?> login(
             @Valid @RequestBody LoginRequest request) {
 
-        String token = authService.login(request);
-
-        return ResponseEntity.ok(token);
+        return ResponseEntity.ok(
+                authService.login(request));
     }
-
 }
