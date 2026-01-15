@@ -7,6 +7,7 @@ import com.divinespark.entity.enums.SessionType;
 import com.divinespark.repository.*;
 import com.divinespark.service.*;
 
+import com.divinespark.utils.ValidationUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -57,29 +58,44 @@ public class SessionServiceImpl implements SessionService  {
 
     @Override
     public Session create(SessionCreateRequest req) {
+
+        // If session is UPCOMING, whatsapp link must be present + valid
+        if (req.getStatus() == SessionStatus.UPCOMING) {
+            if (ValidationUtil.isBlank(req.getWhatsappLink())) {
+                throw new RuntimeException("WhatsApp group link is required for UPCOMING sessions");
+            }
+            if (!ValidationUtil.isValidWhatsAppGroupLink(req.getWhatsappLink())) {
+                throw new RuntimeException("Invalid WhatsApp group link");
+            }
+        }
+
         Session s = new Session();
         s.setTitle(req.getTitle());
         s.setDescription(req.getDescription());
         s.setType(req.getType());
         s.setPrice(req.getPrice());
-        s.setWhatsLink(req.getZoomLink());
         s.setStartTime(req.getStartTime());
         s.setEndTime(req.getEndTime());
         s.setMaxSeats(req.getMaxSeats());
         s.setGuideName(req.getGuideName());
+        s.setStatus(req.getStatus());
+
+        s.setWhatsLink(req.getWhatsappLink());
+
         return repo.save(s);
     }
+
 
     @Override
     public Session update(Long id, SessionUpdateRequest req) {
         Session s = repo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
 
+        // Apply changes
         if (req.getTitle() != null) s.setTitle(req.getTitle());
         if (req.getDescription() != null) s.setDescription(req.getDescription());
         if (req.getType() != null) s.setType(req.getType());
         if (req.getPrice() != null) s.setPrice(req.getPrice());
-        if (req.getZoomLink() != null) s.setWhatsLink(req.getZoomLink());
         if (req.getStartTime() != null) s.setStartTime(req.getStartTime());
         if (req.getEndTime() != null) s.setEndTime(req.getEndTime());
         if (req.getMaxSeats() != null) {
@@ -88,8 +104,30 @@ public class SessionServiceImpl implements SessionService  {
         }
         if (req.getGuideName() != null) s.setGuideName(req.getGuideName());
 
+        // Update whatsapp link if provided (even if empty string – we handle below)
+        if (req.getWhatsappLink() != null) {
+            String link = req.getWhatsappLink().trim();
+            s.setWhatsLink(link);
+        }
+
+        // Update status last
+        if (req.getStatus() != null) {
+            s.setStatus(req.getStatus());
+        }
+
+        // Validation: if resulting session is UPCOMING, whatsapp link must exist & be valid
+        if (s.getStatus() == SessionStatus.UPCOMING) {
+            if (ValidationUtil.isBlank(s.getWhatsLink())) {
+                throw new RuntimeException("WhatsApp group link is required for UPCOMING sessions");
+            }
+            if (!ValidationUtil.isValidWhatsAppGroupLink(s.getWhatsLink())) {
+                throw new RuntimeException("Invalid WhatsApp group link");
+            }
+        }
+
         return repo.save(s);
     }
+
 
     @Override
     public void delete(Long id) {
