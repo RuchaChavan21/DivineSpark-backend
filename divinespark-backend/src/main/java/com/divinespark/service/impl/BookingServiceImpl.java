@@ -53,7 +53,7 @@ public class BookingServiceImpl implements BookingService {
                     "CONFIRMED".equals(booking.getStatus()) &&
                             "UPCOMING".equals(session.getStatus().name())
             ) {
-                dto.setJoinLink(session.getZoomLink());
+                dto.setJoinLink(session.getWhatsLink());
             }
 
 

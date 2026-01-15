@@ -11,7 +11,7 @@ public class UserBookingResponse {
     private String bookingStatus;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
-    private String joinLink; // nullable
+    private String whatsLink; // nullable
 
     public Long getBookingId() {
         return bookingId;
@@ -63,9 +63,9 @@ public class UserBookingResponse {
     }
 
     public String getJoinLink() {
-        return joinLink;
+        return whatsLink;
     }
-    public void setJoinLink(String joinLink) {
-        this.joinLink = joinLink;
+    public void setJoinLink(String whatsLink) {
+        this.whatsLink = whatsLink;
     }
 }

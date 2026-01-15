@@ -58,10 +58,8 @@ public class OtpServiceImpl implements OtpService {
             throw new RuntimeException("OTP expired");
         }
 
-        // 🔑 IMPORTANT LOGIC
         if (purpose == OtpPurpose.VERIFY_EMAIL) {
             entity.setVerified(true); // consume OTP
         }
-        // FORGOT_PASSWORD → only validate, DO NOT consume
     }
 }

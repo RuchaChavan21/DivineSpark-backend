@@ -28,11 +28,8 @@ public class Session {
     @Column(nullable = false)
     private double price;
 
-    @Column(name = "zoom_link")
-    private String zoomLink;
-
-    @Column(name = "zoom_meeting_id")
-    private String zoomMeetingId;
+    @Column(name = "whatsapp-link")
+    private String whatsLink;
 
     @Column(nullable = false)
     private LocalDateTime startTime;
@@ -121,22 +118,6 @@ public class Session {
         this.price = price;
     }
 
-    public String getZoomLink() {
-        return zoomLink;
-    }
-
-    public void setZoomLink(String zoomLink) {
-        this.zoomLink = zoomLink;
-    }
-
-    public String getZoomMeetingId() {
-        return zoomMeetingId;
-    }
-
-    public void setZoomMeetingId(String zoomMeetingId) {
-        this.zoomMeetingId = zoomMeetingId;
-    }
-
     public LocalDateTime getStartTime() {
         return startTime;
     }
@@ -217,6 +198,13 @@ public class Session {
         this.recordingUrl = recordingUrl;
     }
 
+    public String getWhatsLink() {
+        return whatsLink;
+    }
+
+    public void setWhatsLink(String whatsLink) {
+        this.whatsLink = whatsLink;
+    }
 }
 
 
