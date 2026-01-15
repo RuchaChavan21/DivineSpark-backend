@@ -62,20 +62,7 @@ public class AuthController {
                 Map.of("message", "OTP verified"));
     }
 
-    // ================= RESET PASSWORD =================
-    @PostMapping("/reset-password")
-    public ResponseEntity<?> resetPassword(
-            @Valid @RequestBody ResetPasswordRequest request) {
 
-        authService.resetPassword(
-                request.getEmail(),
-                request.getOtp(),
-                request.getNewPassword()
-        );
-
-        return ResponseEntity.ok(
-                Map.of("message", "Password reset successful"));
-    }
 
     // ================= REGISTER =================
     @PostMapping("/register")
