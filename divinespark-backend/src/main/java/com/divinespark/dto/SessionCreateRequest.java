@@ -1,5 +1,6 @@
 package com.divinespark.dto;
 
+import com.divinespark.entity.enums.SessionStatus;
 import com.divinespark.entity.enums.SessionType;
 import java.time.LocalDateTime;
 
@@ -9,11 +10,12 @@ public class SessionCreateRequest {
     private String description;
     private SessionType type;
     private double price;
-    private String zoomLink;
+    private String whatsappLink;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private int maxSeats;
     private String guideName;
+    private SessionStatus status;
 
     public SessionCreateRequest() {
         // no-args constructor
@@ -53,12 +55,12 @@ public class SessionCreateRequest {
         this.price = price;
     }
 
-    public String getZoomLink() {
-        return zoomLink;
+    public String getWhatsappLink() {
+        return whatsappLink;
     }
 
-    public void setZoomLink(String zoomLink) {
-        this.zoomLink = zoomLink;
+    public void setWhatsappLink(String whatsappLink) {
+        this.whatsappLink = whatsappLink;
     }
 
     public LocalDateTime getStartTime() {
@@ -91,5 +93,13 @@ public class SessionCreateRequest {
 
     public void setGuideName(String guideName) {
         this.guideName = guideName;
+    }
+
+    public SessionStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(SessionStatus status) {
+        this.status = status;
     }
 }
