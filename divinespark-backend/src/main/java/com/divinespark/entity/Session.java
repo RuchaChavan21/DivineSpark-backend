@@ -4,12 +4,14 @@ import com.divinespark.entity.enums.SessionStatus;
 import com.divinespark.entity.enums.SessionType;
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
+import java.time.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Entity
 @Table(name = "sessions")
 public class Session {
+
+    private static final ZoneId IST = ZoneId.of("Asia/Kolkata");
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,11 +33,11 @@ public class Session {
     @Column(name = "whatsapp-link")
     private String whatsLink;
 
-    @Column(nullable = false)
-    private LocalDateTime startTime;
+    @Column(columnDefinition = "DATETIME")
+    private OffsetDateTime startTime;
 
-    @Column(nullable = false)
-    private LocalDateTime endTime;
+    @Column(columnDefinition = "DATETIME")
+    private OffsetDateTime endTime;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -53,30 +55,26 @@ public class Session {
     private String guideName;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
-    private LocalDateTime updatedAt;
-
-    private LocalDateTime deletedAt;
+    private OffsetDateTime updatedAt;
+    private OffsetDateTime deletedAt;
 
     private String recordingUrl;
 
-    public Session() {
-        // Default no-args constructor
-    }
-
     @PrePersist
     void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = OffsetDateTime.now(IST);
         availableSeats = maxSeats;
     }
 
     @PreUpdate
     void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = OffsetDateTime.now(IST);
     }
 
-    // ---------- Getters and Setters ---------- //
+    // getters/setters unchanged
+
 
     public Long getId() {
         return id;
@@ -94,20 +92,20 @@ public class Session {
         this.title = title;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
     public SessionType getType() {
         return type;
     }
 
     public void setType(SessionType type) {
         this.type = type;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public double getPrice() {
@@ -118,20 +116,28 @@ public class Session {
         this.price = price;
     }
 
-    public LocalDateTime getStartTime() {
-        return startTime;
+    public String getWhatsLink() {
+        return whatsLink;
     }
 
-    public void setStartTime(LocalDateTime startTime) {
-        this.startTime = startTime;
+    public void setWhatsLink(String whatsLink) {
+        this.whatsLink = whatsLink;
     }
 
-    public LocalDateTime getEndTime() {
+    public OffsetDateTime getEndTime() {
         return endTime;
     }
 
-    public void setEndTime(LocalDateTime endTime) {
+    public void setEndTime(OffsetDateTime endTime) {
         this.endTime = endTime;
+    }
+
+    public OffsetDateTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(OffsetDateTime startTime) {
+        this.startTime = startTime;
     }
 
     public SessionStatus getStatus() {
@@ -146,16 +152,16 @@ public class Session {
         return maxSeats;
     }
 
-    public void setMaxSeats(int maxSeats) {
-        this.maxSeats.set(maxSeats);
+    public void setMaxSeats(AtomicInteger maxSeats) {
+        this.maxSeats = maxSeats;
     }
 
     public AtomicInteger getAvailableSeats() {
         return availableSeats;
     }
 
-    public void setAvailableSeats(int availableSeats) {
-        this.availableSeats.set(availableSeats);
+    public void setAvailableSeats(AtomicInteger availableSeats) {
+        this.availableSeats = availableSeats;
     }
 
     public String getGuideName() {
@@ -166,27 +172,27 @@ public class Session {
         this.guideName = guideName;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public OffsetDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(OffsetDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public LocalDateTime getUpdatedAt() {
+    public OffsetDateTime getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
+    public void setUpdatedAt(OffsetDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 
-    public LocalDateTime getDeletedAt() {
+    public OffsetDateTime getDeletedAt() {
         return deletedAt;
     }
 
-    public void setDeletedAt(LocalDateTime deletedAt) {
+    public void setDeletedAt(OffsetDateTime deletedAt) {
         this.deletedAt = deletedAt;
     }
 
@@ -197,14 +203,4 @@ public class Session {
     public void setRecordingUrl(String recordingUrl) {
         this.recordingUrl = recordingUrl;
     }
-
-    public String getWhatsLink() {
-        return whatsLink;
-    }
-
-    public void setWhatsLink(String whatsLink) {
-        this.whatsLink = whatsLink;
-    }
 }
-
-

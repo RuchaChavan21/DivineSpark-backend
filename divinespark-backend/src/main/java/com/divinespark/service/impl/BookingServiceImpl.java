@@ -46,8 +46,9 @@ public class BookingServiceImpl implements BookingService {
             dto.setSessionTitle(session.getTitle());
             dto.setSessionType(session.getType().name());
             dto.setBookingStatus(booking.getStatus());
-            dto.setStartTime(session.getStartTime());
-            dto.setEndTime(session.getEndTime());
+            dto.setStartTime(session.getStartTime().toLocalDateTime());
+            dto.setEndTime(session.getEndTime().toLocalDateTime());
+
 
             if (
                     "CONFIRMED".equals(booking.getStatus()) &&
@@ -81,9 +82,7 @@ public class BookingServiceImpl implements BookingService {
         booking.setStatus("CANCELLED");
 
         Session session = booking.getSession();
-        session.setAvailableSeats(
-                session.getAvailableSeats().incrementAndGet()
-        );
+        session.getAvailableSeats().incrementAndGet();
 
         bookingRepository.save(booking);
 
