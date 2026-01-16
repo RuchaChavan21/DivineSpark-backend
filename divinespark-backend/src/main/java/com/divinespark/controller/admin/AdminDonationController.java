@@ -27,8 +27,8 @@ public class AdminDonationController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/stats")
     public ResponseEntity<DonationStatsResponse> getStats() {
-        DonationStatsResponse res = new DonationStatsResponse();
-        res.setTotalAmount(donationService.getTotalDonatedAmount());
-        return ResponseEntity.ok(res);
+        return ResponseEntity.ok(donationService.getDonationStats());
     }
+
+
 }

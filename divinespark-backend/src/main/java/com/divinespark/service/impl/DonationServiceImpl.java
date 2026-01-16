@@ -121,4 +121,37 @@ public class DonationServiceImpl implements DonationService {
         donation.setStatus("SUCCESS");
     }
 
+    @Override
+    public long getTotalDonors() {
+        return donationRepository.getTotalDonors();
+    }
+
+    @Override
+    public List<MonthlyDonationResponse> getMonthlyDonations() {
+        List<Object[]> raw = donationRepository.getMonthlyDonations();
+        List<MonthlyDonationResponse> result = new ArrayList<>();
+
+        for (Object[] row : raw) {
+            int month = ((Number) row[0]).intValue();
+            int year = ((Number) row[1]).intValue();
+            double amount = ((Number) row[2]).doubleValue();
+
+            result.add(new MonthlyDonationResponse(month, year, amount));
+        }
+        return result;
+    }
+
+
+    @Override
+    public DonationStatsResponse getDonationStats() {
+        DonationStatsResponse res = new DonationStatsResponse();
+        res.setTotalAmount(donationRepository.getTotalDonatedAmount());
+        res.setTotalDonors(donationRepository.getTotalDonors());
+        res.setMonthlyDonations(getMonthlyDonations());
+        return res;
+    }
+
+
+
+
 }

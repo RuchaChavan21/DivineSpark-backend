@@ -12,6 +12,21 @@ public interface DonationRepository extends JpaRepository<Donation, Long> {
 
     List<Donation> findAllByOrderByCreatedAtDesc();
 
+    // ✅ Total donated amount
     @Query("SELECT COALESCE(SUM(d.amount), 0) FROM Donation d WHERE d.status = 'SUCCESS'")
     double getTotalDonatedAmount();
+
+    // ✅ Unique donors count
+    @Query("SELECT COUNT(DISTINCT d.userId) FROM Donation d WHERE d.status = 'SUCCESS'")
+    long getTotalDonors();
+
+    // ✅ Monthly donations (month, year, amount)
+    @Query("""
+        SELECT MONTH(d.createdAt), YEAR(d.createdAt), SUM(d.amount)
+        FROM Donation d
+        WHERE d.status = 'SUCCESS'
+        GROUP BY YEAR(d.createdAt), MONTH(d.createdAt)
+        ORDER BY YEAR(d.createdAt), MONTH(d.createdAt)
+    """)
+    List<Object[]> getMonthlyDonations();
 }

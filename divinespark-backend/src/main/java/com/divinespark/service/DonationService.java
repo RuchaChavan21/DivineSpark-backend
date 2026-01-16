@@ -20,4 +20,10 @@ public interface DonationService {
 
     void handleDonationCaptured(String orderId, int amount);
 
+    long getTotalDonors();
+
+    List<MonthlyDonationResponse> getMonthlyDonations();
+
+    public DonationStatsResponse getDonationStats();
+
 }
