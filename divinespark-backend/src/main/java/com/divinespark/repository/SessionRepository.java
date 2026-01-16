@@ -6,9 +6,12 @@ import com.divinespark.entity.enums.SessionType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 public interface SessionRepository extends JpaRepository<Session, Long> {
     Page<Session> findByStatus(SessionStatus status, Pageable pageable);
@@ -21,4 +24,15 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
     """)
     Page<Session> findPastSessions(LocalDateTime now, Pageable pageable);
     long countByStatus(SessionStatus status);
+    @Modifying
+    @Query("""
+    UPDATE Session s
+    SET s.status = 'COMPLETED'
+    WHERE s.status = 'UPCOMING'
+    AND s.endTime < :now
+""")
+    int markCompletedSessions(@Param("now") OffsetDateTime now);
+
+
+
 }

@@ -4,6 +4,7 @@ import com.divinespark.dto.*;
 import com.divinespark.entity.*;
 import com.divinespark.entity.enums.SessionStatus;
 import com.divinespark.entity.enums.SessionType;
+import com.divinespark.exception.BusinessException;
 import com.divinespark.repository.*;
 import com.divinespark.service.*;
 import com.divinespark.utils.ValidationUtil;
@@ -157,9 +158,8 @@ public class SessionServiceImpl implements SessionService {
         if (session.getAvailableSeats().get() <= 0)
             throw new RuntimeException("No seats available");
 
-        if (bookingRepository.existsByUserIdAndSessionIdAndStatus(
-                userId, sessionId, "CONFIRMED")) {
-            throw new RuntimeException("Already booked");
+        if (bookingRepository.existsByUserIdAndSessionId(userId, sessionId)) {
+            throw new BusinessException("You have already booked this session.");
         }
 
         User user = userRepo.findById(userId)
