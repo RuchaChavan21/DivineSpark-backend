@@ -1,9 +1,9 @@
 package com.divinespark.dto;
 
-import java.time.LocalDateTime;
-
 import com.divinespark.entity.enums.SessionStatus;
 import com.divinespark.entity.enums.SessionType;
+
+import java.time.OffsetDateTime;
 
 public class SessionUpdateRequest {
 
@@ -11,12 +11,12 @@ public class SessionUpdateRequest {
     private String description;
     private SessionType type;
     private Double price;
-
-    // WhatsApp group link 
     private String whatsappGroupLink;
 
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
+    // ✅ OffsetDateTime only (NO LocalDateTime)
+    private OffsetDateTime startTime;
+    private OffsetDateTime endTime;
+
     private Integer maxSeats;
     private String guideName;
     private SessionStatus status;
@@ -25,7 +25,7 @@ public class SessionUpdateRequest {
         // no-args constructor
     }
 
-    // ------- getters & setters --------
+    // ---------- Getters & Setters ----------
 
     public String getTitle() {
         return title;
@@ -67,19 +67,19 @@ public class SessionUpdateRequest {
         this.whatsappGroupLink = whatsappGroupLink;
     }
 
-    public LocalDateTime getStartTime() {
+    public OffsetDateTime getStartTime() {
         return startTime;
     }
 
-    public void setStartTime(LocalDateTime startTime) {
+    public void setStartTime(OffsetDateTime startTime) {
         this.startTime = startTime;
     }
 
-    public LocalDateTime getEndTime() {
+    public OffsetDateTime getEndTime() {
         return endTime;
     }
 
-    public void setEndTime(LocalDateTime endTime) {
+    public void setEndTime(OffsetDateTime endTime) {
         this.endTime = endTime;
     }
 
