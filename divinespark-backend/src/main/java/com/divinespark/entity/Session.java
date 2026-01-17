@@ -2,6 +2,7 @@ package com.divinespark.entity;
 
 import com.divinespark.entity.enums.SessionStatus;
 import com.divinespark.entity.enums.SessionType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.*;
@@ -61,6 +62,14 @@ public class Session {
     private OffsetDateTime deletedAt;
 
     private String recordingUrl;
+
+    @Lob
+    @JsonIgnore
+    @Column(name = "thumbnail_data", columnDefinition = "MEDIUMBLOB")
+    private byte[] thumbnailData;
+
+    @Column(name = "has_thumbnail", nullable = false)
+    private boolean hasThumbnail = false;
 
     @PrePersist
     void onCreate() {
@@ -202,5 +211,19 @@ public class Session {
 
     public void setRecordingUrl(String recordingUrl) {
         this.recordingUrl = recordingUrl;
+    }
+
+
+    public byte[] getThumbnailData() { return thumbnailData; }
+
+    public void setThumbnailData(byte[] thumbnailData) {
+        this.thumbnailData = thumbnailData;
+        this.hasThumbnail = (thumbnailData != null && thumbnailData.length > 0);
+    }
+
+    public boolean isHasThumbnail() { return hasThumbnail; }
+
+    public void setHasThumbnail(boolean hasThumbnail) {
+        this.hasThumbnail = hasThumbnail;
     }
 }
