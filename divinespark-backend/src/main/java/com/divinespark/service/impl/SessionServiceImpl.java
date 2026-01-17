@@ -10,6 +10,7 @@ import com.divinespark.service.*;
 import com.divinespark.utils.ValidationUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.expression.ExpressionException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -302,4 +303,36 @@ public class SessionServiceImpl implements SessionService {
 
         return res;
     }
+
+    @Override
+    public String getWhatsappLinkIfConfirmed(Long sessionId, Long userId) {
+
+        // 1. Fetch CONFIRMED booking for user + session
+        Booking booking = bookingRepository
+                .findByUserIdAndSessionIdAndStatus(
+                        userId,
+                        sessionId,
+                        "CONFIRMED"
+                )
+                .orElseThrow(() -> new ExpressionException(
+                        "You are not allowed to access this session"
+                ));
+
+        // 2. Fetch session from booking (already mapped)
+        String whatsappLink = booking
+                .getSession()
+                .getWhatsLink();
+
+        // 3. Safety check (admin forgot to add link)
+        if (whatsappLink == null || whatsappLink.isBlank()) {
+            throw new IllegalStateException(
+                    "WhatsApp group link not configured for this session"
+            );
+        }
+
+        // 4. Return link
+        return whatsappLink;
+    }
+
+
 }

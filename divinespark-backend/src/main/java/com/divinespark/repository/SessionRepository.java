@@ -34,5 +34,4 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
     int markCompletedSessions(@Param("now") OffsetDateTime now);
 
 
-
 }
