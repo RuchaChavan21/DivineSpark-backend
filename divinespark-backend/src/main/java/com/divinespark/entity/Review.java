@@ -1,12 +1,13 @@
 package com.divinespark.entity;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(
         name = "reviews",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"booking_id"})
+        uniqueConstraints = @UniqueConstraint(columnNames = "user_id")
 )
 public class Review {
 
@@ -14,31 +15,17 @@ public class Review {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "booking_id", nullable = false)
-    private Booking booking;
-
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "session_id", nullable = false)
-    private Session session;
+    @Column(nullable = false)
+    private Long userId;
 
     @Column(nullable = false)
-    private int rating;
+    private int rating; // 1 to 5
 
     @Column(length = 1000)
     private String comment;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
+    @Column(nullable = false, updatable = false)
+    private OffsetDateTime createdAt = OffsetDateTime.now();
 
     public Long getId() {
         return id;
@@ -48,28 +35,12 @@ public class Review {
         this.id = id;
     }
 
-    public Booking getBooking() {
-        return booking;
+    public Long getUserId() {
+        return userId;
     }
 
-    public void setBooking(Booking booking) {
-        this.booking = booking;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public Session getSession() {
-        return session;
-    }
-
-    public void setSession(Session session) {
-        this.session = session;
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public int getRating() {
@@ -88,11 +59,12 @@ public class Review {
         this.comment = comment;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public OffsetDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(OffsetDateTime createdAt) {
         this.createdAt = createdAt;
     }
 }
+

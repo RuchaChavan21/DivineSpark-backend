@@ -49,22 +49,5 @@ public class BookingController {
         return ResponseEntity.noContent().build();
     }
 
-    @PreAuthorize("hasRole('USER')")
-    @PostMapping("/{bookingId}/review")
-    public ResponseEntity<Void> submitReview(
-            @PathVariable Long bookingId,
-            @RequestBody ReviewCreateRequest request,
-            @AuthenticationPrincipal CustomUserDetails userDetails
-    ) {
-        reviewService.submitReview(
-                bookingId,
-                userDetails.getId(),
-                request
-        );
-        return ResponseEntity.ok().build();
-    }
-
-
-
 
 }
