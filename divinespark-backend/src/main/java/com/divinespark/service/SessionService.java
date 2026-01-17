@@ -28,8 +28,6 @@ public interface SessionService {
 
     long getTotalSessionCount();
 
-    void uploadResource(Long sessionId, String fileType, MultipartFile file);
-
     // USER
     SessionUserListResponse getUpcomingSessions(int page, int size, String type);
 

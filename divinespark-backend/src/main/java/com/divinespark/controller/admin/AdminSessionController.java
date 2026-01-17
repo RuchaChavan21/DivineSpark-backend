@@ -96,20 +96,6 @@ public class AdminSessionController {
         return ResponseEntity.noContent().build(); // 204
     }
 
-    @PostMapping(
-            value = "/{id}/resources",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-    )
-    //@PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> uploadResource(
-            @PathVariable(value = "id", required = true) Long id,
-            @RequestParam("fileType") String fileType,
-            @RequestParam("file") MultipartFile file) {
-
-        sessionService.uploadResource(id, fileType, file);
-        return ResponseEntity.noContent().build();
-    }
-
     //@PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/past")
     public ResponseEntity<SessionListResponse> getPastSessions(

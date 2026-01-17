@@ -27,8 +27,6 @@ public class SessionServiceImpl implements SessionService {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepo;
     private final PaymentRepository paymentRepository;
-    private final StorageService storageService;
-    private final SessionResourceRepository sessionResourceRepository;
     private final SessionRepository sessionRepository;
     private final RazorpayService razorpayService;
 
@@ -37,8 +35,6 @@ public class SessionServiceImpl implements SessionService {
             BookingRepository bookingRepository,
             UserRepository userRepo,
             PaymentRepository paymentRepository,
-            StorageService storageService,
-            SessionResourceRepository sessionResourceRepository,
             SessionRepository sessionRepository,
             RazorpayService razorpayService) {
 
@@ -46,8 +42,6 @@ public class SessionServiceImpl implements SessionService {
         this.bookingRepository = bookingRepository;
         this.userRepo = userRepo;
         this.paymentRepository = paymentRepository;
-        this.storageService = storageService;
-        this.sessionResourceRepository = sessionResourceRepository;
         this.sessionRepository = sessionRepository;
         this.razorpayService = razorpayService;
     }
@@ -254,23 +248,6 @@ public class SessionServiceImpl implements SessionService {
     @Override
     public long getTotalSessionCount() {
         return sessionRepository.count();
-    }
-
-    @Override
-    public void uploadResource(Long sessionId, String fileType, MultipartFile file) {
-
-        Session session = repo.findById(sessionId)
-                .orElseThrow(() -> new RuntimeException("Session not found"));
-
-        String url = storageService.upload(file, "sessions/" + sessionId);
-
-        SessionResource resource = new SessionResource();
-        resource.setSession(session);
-        resource.setFileName(file.getOriginalFilename());
-        resource.setFileUrl(url);
-        resource.setFileType(fileType);
-
-        sessionResourceRepository.save(resource);
     }
 
     @Override
