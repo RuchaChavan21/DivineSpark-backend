@@ -50,7 +50,8 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/api/v1/auth/**",
                                 "/api/v1/payments/webhook",
-                                "/api/v1/user/**"
+                                "/api/v1/user/**",
+                                "api/v1/public/**"
                         ).permitAll()
 
                         // Public session browsing
