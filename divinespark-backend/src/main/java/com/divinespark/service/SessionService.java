@@ -40,4 +40,6 @@ public interface SessionService {
     List<AdminSessionUserResponse> getUsersBySession(Long sessionId);
 
     List<AdminSessionBookingResponse> getBookingsBySession(Long sessionId);
+
+    public String getWhatsappLinkIfConfirmed(Long sessionId, Long userId);
 }

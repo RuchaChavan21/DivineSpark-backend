@@ -20,11 +20,9 @@ public class Booking {
     @JoinColumn(name = "session_id", nullable = false)
     private Session session;
 
-    @Column(name = "zoom_registrant_id")
-    private String zoomRegistrantId;
 
-    @Column(name = "zoom_join_url", columnDefinition = "TEXT")
-    private String zoomJoinUrl;
+    @Column(name = "whatsapp_group_link", columnDefinition = "TEXT")
+    private String whatsappLink;
 
 
     @Column(nullable = false)
@@ -46,20 +44,12 @@ public class Booking {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
-    public String getZoomRegistrantId() {
-        return zoomRegistrantId;
+
+    public String getWhatsappLink() {
+        return whatsappLink;
     }
 
-    public void setZoomRegistrantId(String zoomRegistrantId) {
-        this.zoomRegistrantId = zoomRegistrantId;
+    public void setWhatsappLink(String whatsappLink) {
+        this.whatsappLink = whatsappLink;
     }
-
-    public String getZoomJoinUrl() {
-        return zoomJoinUrl;
-    }
-
-    public void setZoomJoinUrl(String zoomJoinUrl) {
-        this.zoomJoinUrl = zoomJoinUrl;
-    }
-
 }

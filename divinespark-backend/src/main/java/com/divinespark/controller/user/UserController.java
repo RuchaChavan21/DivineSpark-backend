@@ -88,6 +88,20 @@ public class UserController {
         );
     }
 
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/sessions/{sessionId}/whatsapp-link")
+    public ResponseEntity<?> getWhatsappLink(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        String link = sessionService.getWhatsappLinkIfConfirmed(
+                sessionId, userDetails.getId()
+        );
+
+        return ResponseEntity.ok(
+                Map.of("whatsappLink", link)
+        );
+    }
 
 
 }

@@ -53,7 +53,7 @@ public class SecurityConfig {
                         ).permitAll()
 
                         // Public session browsing
-                        .requestMatchers(HttpMethod.GET, "/api/v1/sessions/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/sessions/**", "/api/v1/admin/thumbnail/").permitAll()
 
                         // Protected session actions
                         .requestMatchers(HttpMethod.POST, "/api/v1/sessions/**").hasRole("USER")
