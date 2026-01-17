@@ -52,6 +52,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     SELECT new com.divinespark.dto.AdminSessionBookingResponse(
         b.id,
         u.id,
+        u.username,
+        u.contactNumber,
         u.email,
         b.status,
         b.createdAt
