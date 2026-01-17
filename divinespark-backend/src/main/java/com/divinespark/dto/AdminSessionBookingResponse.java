@@ -8,18 +8,23 @@ public class AdminSessionBookingResponse {
     private Long userId;
     private String email;
     private String username;
+    private String phoneNumber;
     private String bookingStatus;
     private LocalDateTime bookedAt;
 
     public AdminSessionBookingResponse(
             Long bookingId,
             Long userId,
+            String username,
+            String phoneNumber,
             String email,
             String bookingStatus,
             LocalDateTime bookedAt) {
 
         this.bookingId = bookingId;
         this.userId = userId;
+        this.username = username;
+        this.phoneNumber = phoneNumber;
         this.email = email;
         this.bookingStatus = bookingStatus;
         this.bookedAt = bookedAt;
@@ -31,4 +36,6 @@ public class AdminSessionBookingResponse {
     public String getUsername() { return username; }
     public String getBookingStatus() { return bookingStatus; }
     public LocalDateTime getBookedAt() { return bookedAt; }
+    public String getPhoneNumber() { return phoneNumber; }
+
 }
