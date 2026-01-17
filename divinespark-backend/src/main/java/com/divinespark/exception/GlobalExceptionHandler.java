@@ -47,4 +47,10 @@ public class GlobalExceptionHandler {
                         "Request violates data constraints."
                 ));
     }
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<?> handleIllegalState(IllegalStateException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("message", ex.getMessage()));
+    }
+
 }
