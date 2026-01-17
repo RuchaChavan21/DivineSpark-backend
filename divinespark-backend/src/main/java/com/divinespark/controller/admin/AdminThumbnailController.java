@@ -3,6 +3,7 @@ package com.divinespark.controller.admin;
 import com.divinespark.service.impl.ThumbnailServiceImpl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,6 +21,7 @@ public class AdminThumbnailController {
             value = "/{sessionId}",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> saveThumbnail(
             @PathVariable String sessionId,
             @RequestPart("thumbnail") MultipartFile thumbnail) {
@@ -31,6 +33,7 @@ public class AdminThumbnailController {
             value = "/{sessionId}",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateThumbnail(
             @PathVariable String sessionId,
             @RequestPart("thumbnail") MultipartFile thumbnail) {
@@ -39,11 +42,13 @@ public class AdminThumbnailController {
     }
 
     @GetMapping("/{sessionId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getThumbnail(@PathVariable String sessionId) {
         return thumbnailService.getThumbnail(sessionId);
     }
 
     @DeleteMapping("/{sessionId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteThumbnail(@PathVariable String sessionId) {
         return thumbnailService.deleteThumbnail(sessionId);
     }
