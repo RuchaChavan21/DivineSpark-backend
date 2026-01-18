@@ -3,6 +3,7 @@ package com.divinespark.service.impl;
 import com.divinespark.dto.*;
 import com.divinespark.entity.Donation;
 import com.divinespark.repository.DonationRepository;
+import com.divinespark.repository.UserRepository;
 import com.divinespark.service.DonationService;
 import com.divinespark.service.RazorpayService;
 import com.divinespark.utils.RazorpaySignatureUtil;
@@ -17,13 +18,15 @@ public class DonationServiceImpl implements DonationService {
 
     private final DonationRepository donationRepository;
     private final RazorpayService razorpayService;
+    private final UserRepository userRepository;
 
     public DonationServiceImpl(
             DonationRepository donationRepository,
-            RazorpayService razorpayService
+            RazorpayService razorpayService, UserRepository userRepository
     ) {
         this.donationRepository = donationRepository;
         this.razorpayService = razorpayService;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -92,6 +95,13 @@ public class DonationServiceImpl implements DonationService {
             dto.setNote(d.getNote());
             dto.setStatus(d.getStatus());
             dto.setCreatedAt(d.getCreatedAt());
+            // 🔹 Fetch user
+            if (d.getUserId() != null) {
+                userRepository.findById(d.getUserId()).ifPresent(user -> {
+                    dto.setUserName(user.getUsername()); // or getName()
+                    dto.setContactNumber(user.getContactNumber());
+                });
+            }
             response.add(dto);
         }
 
