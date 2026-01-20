@@ -78,6 +78,9 @@ public class SessionServiceImpl implements SessionService {
         s.setGuideName(req.getGuideName());
         s.setStatus(req.getStatus() != null ? req.getStatus() : SessionStatus.UPCOMING);
 
+        s.setHasThumbnail(false);
+        s.setThumbnailData(null);
+
         return repo.save(s);
     }
 
