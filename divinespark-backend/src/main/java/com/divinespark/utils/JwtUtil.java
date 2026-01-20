@@ -15,15 +15,15 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String secret;
 
-    @Value("${jwt.expiration}")
+    @Value("3600000")
     private long expiration;
 
-    // 🔐 Signing Key
+    // Signing Key
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    // ✅ Generate JWT (used for NORMAL + OAUTH login)
+    // Generate JWT (used for NORMAL + OAUTH login)
     public String generateToken(String email, String role) {
 
         return Jwts.builder()
@@ -35,17 +35,17 @@ public class JwtUtil {
                 .compact();
     }
 
-    // 📤 Extract Email (Subject)
+    // Extract Email (Subject)
     public String extractEmail(String token) {
         return parseClaims(token).getSubject();
     }
 
-    // 📤 Extract Role
+    //Extract Role
     public String extractRole(String token) {
         return parseClaims(token).get("role", String.class);
     }
 
-    // ✅ Token Validation (used by JWT filter)
+    // Token Validation (used by JWT filter)
     public boolean validateToken(String token) {
         try {
             parseClaims(token);
@@ -63,7 +63,7 @@ public class JwtUtil {
         }
     }
 
-    // 🔁 Centralized parsing
+    // Centralized parsing
     private Claims parseClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
