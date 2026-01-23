@@ -4,10 +4,19 @@ import java.time.OffsetDateTime;
 
 public class ReviewResponse {
 
+    private Long id;
     private int rating;
     private String comment;
     private String userName;
     private OffsetDateTime createdAt;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public String getComment() {
         return comment;
