@@ -57,6 +57,7 @@ public class ReviewServiceImpl implements ReviewService {
 
         ReviewResponse response = new ReviewResponse();
         response.setRating(review.getRating());
+        response.setId(review.getId());
         response.setUserName(review.getUserName());
         response.setComment(review.getComment());
         response.setCreatedAt(review.getCreatedAt());
@@ -74,6 +75,7 @@ public class ReviewServiceImpl implements ReviewService {
 
         for (Review r : reviews) {
             ReviewResponse dto = new ReviewResponse();
+            dto.setId(r.getId());
             dto.setRating(r.getRating());
             dto.setComment(r.getComment());
             dto.setUserName(r.getUserName());
@@ -96,6 +98,7 @@ public class ReviewServiceImpl implements ReviewService {
         for (Review r : reviews) {
             ReviewResponse dto = new ReviewResponse();
             dto.setRating(r.getRating());
+            dto.setId(r.getId());
             dto.setComment(r.getComment());
             dto.setUserName(r.getUserName());
             dto.setCreatedAt(r.getCreatedAt());
