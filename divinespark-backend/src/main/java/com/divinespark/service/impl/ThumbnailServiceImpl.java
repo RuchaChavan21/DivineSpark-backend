@@ -29,7 +29,7 @@ public class ThumbnailServiceImpl implements ThumbnailService {
                         .body("Thumbnail file is required");
             }
 
-            // 🔒 SIZE VALIDATION
+            // SIZE VALIDATION
             if (file.getSize() > MAX_THUMBNAIL_SIZE) {
                 return ResponseEntity.badRequest()
                         .body("Thumbnail size must be less than or equal to 5 MB");
