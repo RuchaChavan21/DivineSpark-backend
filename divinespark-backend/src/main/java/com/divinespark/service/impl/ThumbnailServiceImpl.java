@@ -13,6 +13,8 @@ import org.springframework.web.multipart.MultipartFile;
 public class ThumbnailServiceImpl implements ThumbnailService {
 
     private final SessionRepository repo;
+    private static final long MAX_THUMBNAIL_SIZE = 5 * 1024 * 1024; // 5 MB
+
 
     public ThumbnailServiceImpl(SessionRepository repo) {
         this.repo = repo;
@@ -21,6 +23,18 @@ public class ThumbnailServiceImpl implements ThumbnailService {
     @Override
     public ResponseEntity<?> saveThumbnail(String id, MultipartFile file) {
         try {
+
+            if (file == null || file.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body("Thumbnail file is required");
+            }
+
+            // SIZE VALIDATION
+            if (file.getSize() > MAX_THUMBNAIL_SIZE) {
+                return ResponseEntity.badRequest()
+                        .body("Thumbnail size must be less than or equal to 5 MB");
+            }
+
             Session session = repo.findById(Long.valueOf(id))
                     .orElseThrow(() -> new RuntimeException("Session not found"));
 
@@ -41,6 +55,16 @@ public class ThumbnailServiceImpl implements ThumbnailService {
     @Override
     public ResponseEntity<?> updateThumbnail(String id, MultipartFile file) {
         try {
+            if (file == null || file.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body("Thumbnail file is required");
+            }
+
+            //SIZE VALIDATION
+            if (file.getSize() > MAX_THUMBNAIL_SIZE) {
+                return ResponseEntity.badRequest()
+                        .body("Thumbnail size must be less than or equal to 5 MB");
+            }
             Session session = repo.findById(Long.valueOf(id))
                     .orElseThrow(() -> new RuntimeException("Session not found"));
 

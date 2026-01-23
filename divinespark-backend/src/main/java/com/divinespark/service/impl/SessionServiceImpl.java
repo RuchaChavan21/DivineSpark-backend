@@ -13,7 +13,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.expression.ExpressionException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -77,6 +76,9 @@ public class SessionServiceImpl implements SessionService {
 
         s.setGuideName(req.getGuideName());
         s.setStatus(req.getStatus() != null ? req.getStatus() : SessionStatus.UPCOMING);
+
+        s.setHasThumbnail(false);
+        s.setThumbnailData(null);
 
         return repo.save(s);
     }
