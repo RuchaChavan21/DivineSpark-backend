@@ -18,7 +18,7 @@ public class RazorpayServiceImpl implements RazorpayService {
     }
 
     @Override
-    public RazorpayOrderResponse createOrder(double amount, Long bookingId) {
+    public RazorpayOrderResponse createOrder(int amountInPaise, Long referenceId) {
 
         try {
             RazorpayClient client = new RazorpayClient(
@@ -27,16 +27,15 @@ public class RazorpayServiceImpl implements RazorpayService {
             );
 
             JSONObject orderRequest = new JSONObject();
-            orderRequest.put("amount", (int) (amount * 100)); // paise
+            orderRequest.put("amount", amountInPaise); // already paise
             orderRequest.put("currency", razorpayConfig.getCurrency());
-            orderRequest.put("receipt", "booking_" + bookingId);
+            orderRequest.put("receipt", "ref_" + referenceId);
             orderRequest.put("payment_capture", 1);
 
             Order order = client.orders.create(orderRequest);
 
             RazorpayOrderResponse response = new RazorpayOrderResponse();
             response.setOrderId(order.get("id"));
-            System.out.println("RAZORPAY ORDER ID => " + order.get("id"));
 
             return response;
 
@@ -44,4 +43,5 @@ public class RazorpayServiceImpl implements RazorpayService {
             throw new RuntimeException("Failed to create Razorpay order", e);
         }
     }
+
 }

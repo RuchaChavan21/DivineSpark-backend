@@ -1,5 +1,7 @@
 package com.divinespark.dto;
 
+import com.divinespark.entity.enums.BookingStatus;
+
 import java.time.LocalDateTime;
 
 public class UserBookingResponse {
@@ -8,7 +10,7 @@ public class UserBookingResponse {
     private Long sessionId;
     private String sessionTitle;
     private String sessionType;
-    private String bookingStatus;
+    private BookingStatus status;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private String whatsLink; // nullable
@@ -41,11 +43,12 @@ public class UserBookingResponse {
         this.sessionType = sessionType;
     }
 
-    public String getBookingStatus() {
-        return bookingStatus;
+    public BookingStatus getStatus() {
+        return status;
     }
-    public void setBookingStatus(String bookingStatus) {
-        this.bookingStatus = bookingStatus;
+
+    public void setStatus(BookingStatus status) {
+        this.status = status;
     }
 
     public LocalDateTime getStartTime() {
