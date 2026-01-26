@@ -19,4 +19,9 @@ public interface BlogService {
     List<BlogListResponse> getPublishedBlogs();
 
     BlogDetailResponse getBlogBySlug(String slug);
+
+    List<BlogListResponse> getAllBlogsForAdmin();
+
+    BlogDetailResponse getBlogByIdForAdmin(Long id);
+
 }

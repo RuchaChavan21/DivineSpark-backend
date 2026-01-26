@@ -123,4 +123,44 @@ public class BlogServiceImpl implements BlogService {
 
         return slug;
     }
+
+    @Override
+    public List<BlogListResponse> getAllBlogsForAdmin() {
+
+        List<Blog> blogs = blogRepository.findAllByOrderByCreatedAtDesc();
+        List<BlogListResponse> response = new ArrayList<>();
+
+        for (Blog b : blogs) {
+            BlogListResponse dto = new BlogListResponse();
+            dto.setId(b.getId()); // ⭐ THIS WAS MISSING
+            dto.setTitle(b.getTitle());
+            dto.setSlug(b.getSlug());
+            dto.setExcerpt(b.getExcerpt());
+            dto.setAuthorName(b.getAuthorName());
+            dto.setAuthorRole(b.getAuthorRole());
+            dto.setCreatedAt(b.getCreatedAt());
+            response.add(dto);
+        }
+
+        return response;
+    }
+
+
+    @Override
+    public BlogDetailResponse getBlogByIdForAdmin(Long id) {
+
+        Blog blog = blogRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Blog not found"));
+
+        BlogDetailResponse res = new BlogDetailResponse();
+        res.setTitle(blog.getTitle());
+        res.setContent(blog.getContent());
+        res.setAuthorName(blog.getAuthorName());
+        res.setAuthorRole(blog.getAuthorRole());
+        res.setCreatedAt(blog.getCreatedAt());
+
+        return res;
+    }
+
+
 }

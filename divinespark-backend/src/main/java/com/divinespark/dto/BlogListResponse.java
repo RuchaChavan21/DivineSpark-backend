@@ -9,6 +9,8 @@ public class BlogListResponse {
     private String authorName;
     private String authorRole;
     private OffsetDateTime createdAt;
+    private Long id;
+
 
     public String getAuthorName() {
         return authorName;
@@ -17,6 +19,15 @@ public class BlogListResponse {
     public void setAuthorName(String authorName) {
         this.authorName = authorName;
     }
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+
 
     public String getAuthorRole() {
         return authorRole;

@@ -17,4 +17,12 @@ public interface BlogRepository extends JpaRepository<Blog, Long> {
 
     // Admin checks
     boolean existsBySlug(String slug);
+
+    List<Blog> findAllByOrderByCreatedAtDesc();
+
+
+
+    ;
+
+
 }
