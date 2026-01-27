@@ -95,26 +95,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     public boolean handlePaymentCaptured(String razorpayOrderId, int amount) {
 
-        // FULL PAYMENT
-        Payment payment = paymentRepository.findByGatewayOrderId(razorpayOrderId);
-
-        if (payment != null) {
-
-            if ("SUCCESS".equals(payment.getStatus())) return true;
-
-            payment.setStatus("SUCCESS");
-            paymentRepository.save(payment);
-
-            Booking booking = bookingRepo.findById(payment.getBookingId())
-                    .orElseThrow();
-
-            booking.setBookingStatus(BookingStatus.CONFIRMED);
-            bookingRepo.save(booking);
-
-            return true;
-        }
-
-        // 1️INSTALLMENT FIRST
+        // 1️⃣ INSTALLMENT PAYMENT (CHECK FIRST)
         Installment installment =
                 installmentRepository.findByRazorpayOrderId(razorpayOrderId)
                         .orElse(null);
@@ -122,7 +103,7 @@ public class PaymentServiceImpl implements PaymentService {
         if (installment != null) {
 
             if (installment.getStatus() == InstallmentStatus.PAID) {
-                return true;
+                return true; // idempotent
             }
 
             installment.setStatus(InstallmentStatus.PAID);
@@ -145,12 +126,15 @@ public class PaymentServiceImpl implements PaymentService {
                     Math.max(booking.getTotalAmount() - paidAmount, 0)
             );
 
-            if (booking.getRemainingAmount() <= 0) {
-                booking.setBookingStatus(BookingStatus.CONFIRMED);
-            } else {
-                booking.setBookingStatus(BookingStatus.PARTIALLY_PAID);
-            }
+            booking.setBookingStatus(
+                    booking.getRemainingAmount() == 0
+                            ? BookingStatus.CONFIRMED
+                            : BookingStatus.PARTIALLY_PAID
+            );
 
+            bookingRepo.save(booking);
+
+            // Payment record (for admin / audit)
             Payment p = new Payment();
             p.setBookingId(booking.getId());
             p.setAmount(installment.getAmount());
@@ -158,13 +142,35 @@ public class PaymentServiceImpl implements PaymentService {
             p.setStatus("SUCCESS");
             paymentRepository.save(p);
 
+            return true;
+        }
 
+        // 2️⃣ FULL PAYMENT (CHECK AFTER)
+        Payment payment =
+                paymentRepository.findByGatewayOrderId(razorpayOrderId);
+
+        if (payment != null) {
+
+            if ("SUCCESS".equals(payment.getStatus())) {
+                return true;
+            }
+
+            payment.setStatus("SUCCESS");
+            paymentRepository.save(payment);
+
+            Booking booking = bookingRepo.findById(payment.getBookingId())
+                    .orElseThrow();
+
+            booking.setPaidAmount(booking.getTotalAmount());
+            booking.setRemainingAmount(0);
+            booking.setBookingStatus(BookingStatus.CONFIRMED);
             bookingRepo.save(booking);
+
             return true;
         }
 
         return false;
-
     }
+
 
 }

@@ -7,6 +7,7 @@ import com.divinespark.dto.RazorpayOrderResponse;
 import com.divinespark.entity.Booking;
 import com.divinespark.entity.Installment;
 import com.divinespark.entity.Payment;
+import com.divinespark.entity.enums.BookingStatus;
 import com.divinespark.entity.enums.InstallmentStatus;
 import com.divinespark.repository.BookingRepository;
 import com.divinespark.repository.InstallmentRepository;
@@ -16,6 +17,7 @@ import com.divinespark.service.RazorpayService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -124,6 +126,44 @@ public class InstallmentServiceImpl implements InstallementService {
                         i.getPaidAt()
                 ))
                 .collect(Collectors.toList());
+    }
+
+
+    @Transactional
+    public void markInstallmentPaid(String razorpayOrderId) {
+
+        Installment installment = installmentRepository
+                .findByRazorpayOrderId(razorpayOrderId)
+                .orElseThrow(() -> new RuntimeException("Installment not found"));
+
+        if (installment.getStatus() == InstallmentStatus.PAID) {
+            return;
+        }
+
+        // Mark installment paid
+        installment.setStatus(InstallmentStatus.PAID);
+        installment.setPaidAt(OffsetDateTime.now());
+        installmentRepository.save(installment);
+
+        Booking booking = installment.getBooking();
+
+        // Update booking amounts
+        booking.setPaidAmount(
+                booking.getPaidAmount() + installment.getAmount()
+        );
+        booking.setRemainingAmount(
+                booking.getTotalAmount() - booking.getPaidAmount()
+        );
+
+        // Update booking status
+        boolean allPaid = installmentRepository
+                .findByBookingIdOrderByInstallmentNumber(booking.getId())
+                .stream()
+                .allMatch(i -> i.getStatus() == InstallmentStatus.PAID);
+
+        booking.setBookingStatus(
+                allPaid ? BookingStatus.CONFIRMED : BookingStatus.PARTIALLY_PAID
+        );
     }
 
 
