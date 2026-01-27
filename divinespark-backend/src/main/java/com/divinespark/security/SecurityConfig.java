@@ -54,7 +54,7 @@ public class SecurityConfig {
                         ).permitAll()
 
                         // User APIs
-                        .requestMatchers("/api/v1/user/**", "/api/v1/installments/**").hasRole("USER")
+                        .requestMatchers("/api/v1/user/**", "/api/v1/installments/**, ", "/api/v1/payments").hasRole("USER")
 
                         // Public session browsing
                         .requestMatchers(HttpMethod.GET, "/api/v1/sessions/**").permitAll()

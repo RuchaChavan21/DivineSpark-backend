@@ -11,5 +11,5 @@ public interface InstallementService {
 
     List<InstallmentResponse> getInstallmentsByBooking(Long bookingId, Long userId);
 
-
+    void markInstallmentPaid(String razorpayOrderId);
 }
