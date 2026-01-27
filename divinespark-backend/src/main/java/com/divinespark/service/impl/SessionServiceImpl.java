@@ -2,10 +2,7 @@ package com.divinespark.service.impl;
 
 import com.divinespark.dto.*;
 import com.divinespark.entity.*;
-import com.divinespark.entity.enums.BookingStatus;
-import com.divinespark.entity.enums.PaymentType;
-import com.divinespark.entity.enums.SessionStatus;
-import com.divinespark.entity.enums.SessionType;
+import com.divinespark.entity.enums.*;
 import com.divinespark.exception.BusinessException;
 import com.divinespark.repository.*;
 import com.divinespark.service.*;
@@ -247,6 +244,10 @@ public class SessionServiceImpl implements SessionService {
         Session session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
 
+        if (session.getType() != SessionType.PAID) {
+            throw new RuntimeException("Not a paid session");
+        }
+
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -261,14 +262,11 @@ public class SessionServiceImpl implements SessionService {
         booking.setBookingStatus(BookingStatus.PENDING);
         booking.setWhatsappLink(session.getWhatsLink());
 
-
-
         bookingRepository.save(booking);
         session.getAvailableSeats().decrementAndGet();
 
-        //  Create installments (3 parts)
-        double totalAmount = session.getPrice();
-        double installmentAmount = totalAmount / 3.0;
+        // Create installments (3 parts)
+        double installmentAmount = session.getPrice() / 3.0;
 
         List<Installment> installments = new ArrayList<>();
 
@@ -277,31 +275,25 @@ public class SessionServiceImpl implements SessionService {
             inst.setBooking(booking);
             inst.setInstallmentNumber(i);
             inst.setAmount(installmentAmount);
-            inst.setPaidAt(OffsetDateTime.now());
             inst.setDueDate(OffsetDateTime.now().plusMonths(i - 1));
+            inst.setStatus(InstallmentStatus.PENDING);
             installments.add(inst);
         }
 
         installmentRepository.saveAll(installments);
 
-        // Pick first installment
+        // First installment ONLY
         Installment firstInstallment = installments.get(0);
 
-        // Create Razorpay order
+        // Charge ONLY installment amount
         RazorpayOrderResponse order =
                 razorpayService.createOrder(
-                        (int) Math.round(session.getPrice() * 100),
+                        (int) Math.round(firstInstallment.getAmount() * 100),
                         booking.getId()
                 );
 
-
         firstInstallment.setRazorpayOrderId(order.getOrderId());
         installmentRepository.save(firstInstallment);
-
-        installmentRepository.updateOrderId(
-                firstInstallment.getId(),
-                order.getOrderId()
-        );
 
         // Response
         InstallmentPaymentInitiateResponse res =
@@ -310,18 +302,11 @@ public class SessionServiceImpl implements SessionService {
         res.setBookingId(booking.getId());
         res.setInstallmentId(firstInstallment.getId());
         res.setRazorpayOrderId(order.getOrderId());
-        res.setAmount(firstInstallment.getAmount() * 100);
-
-        Payment payment = new Payment();
-        payment.setBookingId(booking.getId());
-        payment.setAmount(firstInstallment.getAmount());
-        payment.setGatewayOrderId(order.getOrderId());
-        payment.setStatus("CREATED");
-        paymentRepository.save(payment);
-
+        res.setAmount((int) Math.round(firstInstallment.getAmount() * 100));
 
         return res;
     }
+
 
 
     @Override

@@ -2,6 +2,7 @@ package com.divinespark.controller.user;
 
 import com.divinespark.dto.*;
 import com.divinespark.security.CustomUserDetails;
+import com.divinespark.service.InstallementService;
 import com.divinespark.service.SessionService;
 import com.divinespark.service.UserService;
 import org.springframework.http.ResponseEntity;
@@ -17,10 +18,12 @@ public class UserController {
 
     private final SessionService sessionService;
     private final UserService userService;
+    private final InstallementService installementService;
 
-    public UserController(SessionService sessionService, UserService userService) {
+    public UserController(SessionService sessionService, UserService userService, InstallementService installementService) {
         this.sessionService = sessionService;
         this.userService = userService;
+        this.installementService = installementService;
     }
 
     @GetMapping("/sessions")
@@ -82,6 +85,8 @@ public class UserController {
 
         return ResponseEntity.ok(response);
     }
+
+
 
     @GetMapping("/profile")
     public ResponseEntity<UserProfileResponse> getMyProfile(
