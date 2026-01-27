@@ -2,6 +2,7 @@ package com.divinespark.controller.user;
 
 import com.divinespark.dto.ReviewCreateRequest;
 import com.divinespark.dto.UserBookingResponse;
+import com.divinespark.dto.UserSessionBookingResponse;
 import com.divinespark.security.CustomUserDetails;
 import com.divinespark.service.BookingService;
 import com.divinespark.service.ReviewService;
@@ -48,6 +49,21 @@ public class BookingController {
 
         return ResponseEntity.noContent().build();
     }
+
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/session/{sessionId}/me")
+    public ResponseEntity<UserSessionBookingResponse> getMyBookingForSession(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return ResponseEntity.ok(
+                bookingService.getMyBookingForSession(
+                        userDetails.getId(),
+                        sessionId
+                )
+        );
+    }
+
 
 
 }

@@ -2,6 +2,7 @@ package com.divinespark.service.impl;
 
 import com.divinespark.dto.AdminSessionUserResponse;
 import com.divinespark.dto.UserBookingResponse;
+import com.divinespark.dto.UserSessionBookingResponse;
 import com.divinespark.entity.Booking;
 import com.divinespark.entity.Session;
 import com.divinespark.entity.enums.BookingStatus;
@@ -130,5 +131,26 @@ public class BookingServiceImpl implements BookingService {
             throw new RuntimeException("Failed to download users");
         }
     }
+
+    @Override
+    public UserSessionBookingResponse getMyBookingForSession(
+            Long userId,
+            Long sessionId
+    ) {
+
+        Booking booking = bookingRepository
+                .findByUser_IdAndSession_Id(userId, sessionId)
+                .orElseThrow(() -> new RuntimeException("No booking found"));
+
+        return new UserSessionBookingResponse(
+                booking.getId(),
+                booking.getBookingStatus(),
+                booking.getPaymentType(),
+                booking.getTotalAmount(),
+                booking.getPaidAmount(),
+                booking.getRemainingAmount()
+        );
+    }
+
 
 }
