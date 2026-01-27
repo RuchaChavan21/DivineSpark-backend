@@ -4,6 +4,8 @@ import com.divinespark.dto.AdminSessionUserResponse;
 import com.divinespark.dto.UserBookingResponse;
 import com.divinespark.entity.Booking;
 import com.divinespark.entity.Session;
+import com.divinespark.entity.enums.BookingStatus;
+import com.divinespark.entity.enums.SessionStatus;
 import com.divinespark.repository.BookingRepository;
 import com.divinespark.service.BookingService;
 import com.divinespark.service.EmailService;
@@ -45,15 +47,16 @@ public class BookingServiceImpl implements BookingService {
             dto.setSessionId(session.getId());
             dto.setSessionTitle(session.getTitle());
             dto.setSessionType(session.getType().name());
-            dto.setBookingStatus(booking.getStatus());
+            dto.setStatus(booking.getBookingStatus());
             dto.setStartTime(session.getStartTime().toLocalDateTime());
             dto.setEndTime(session.getEndTime().toLocalDateTime());
 
-
             if (
-                    "CONFIRMED".equals(booking.getStatus()) &&
-                            "UPCOMING".equals(session.getStatus().name())
-            ) {
+                    (booking.getBookingStatus() == BookingStatus.CONFIRMED ||
+                            booking.getBookingStatus() == BookingStatus.PARTIALLY_PAID) &&
+                            session.getStatus() == SessionStatus.UPCOMING
+            )
+ {
                 dto.setJoinLink(session.getWhatsLink());
             }
 
@@ -75,11 +78,11 @@ public class BookingServiceImpl implements BookingService {
             throw new RuntimeException("Unauthorized cancellation");
         }
 
-        if ("CANCELLED".equals(booking.getStatus())) {
+        if ("CANCELLED".equals(booking.getBookingStatus())) {
             throw new RuntimeException("Booking already cancelled");
         }
 
-        booking.setStatus("CANCELLED");
+        booking.setBookingStatus(BookingStatus.CANCELLED);
 
         Session session = booking.getSession();
         session.getAvailableSeats().incrementAndGet();

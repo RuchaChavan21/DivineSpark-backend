@@ -42,4 +42,10 @@ public interface SessionService {
     List<AdminSessionBookingResponse> getBookingsBySession(Long sessionId);
 
     public String getWhatsappLinkIfConfirmed(Long sessionId, Long userId);
+
+    public InstallmentPaymentInitiateResponse initiateInstallmentPayment(
+            Long sessionId,
+            Long userId
+    );
 }
+

@@ -1,14 +1,16 @@
 package com.divinespark.dto;
 
+import com.divinespark.entity.enums.BookingStatus;
+
 public class AdminSessionUserResponse {
 
     private Long userId;
     private String email;
     private String username;
     private String contactNumber;
-    private String bookingStatus;
+    private BookingStatus bookingStatus;
 
-    public AdminSessionUserResponse(Long userId, String email, String bookingStatus, String username, String contactNumber) {
+    public AdminSessionUserResponse(Long userId, String email, BookingStatus bookingStatus, String username, String contactNumber) {
         this.userId = userId;
         this.email = email;
         this.bookingStatus = bookingStatus;
@@ -24,7 +26,7 @@ public class AdminSessionUserResponse {
         return email;
     }
 
-    public String getBookingStatus() {
+    public BookingStatus getBookingStatus() {
         return bookingStatus;
     }
 

@@ -3,23 +3,19 @@ package com.divinespark.repository;
 import com.divinespark.dto.AdminSessionBookingResponse;
 import com.divinespark.dto.AdminSessionUserResponse;
 import com.divinespark.entity.Booking;
+import com.divinespark.entity.enums.BookingStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
-    boolean existsByUserIdAndSessionIdAndStatus(
-            Long userId,
-            Long sessionId,
-            String status
-    );
-
-
+    // ---------- USER BOOKINGS ----------
     @Query("""
         SELECT b FROM Booking b
         JOIN FETCH b.session
@@ -28,64 +24,61 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     """)
     List<Booking> findUserBookingsWithSession(Long userId);
 
-    Optional<Booking> findById(Long id);
+    Optional<Booking> findByUser_IdAndSession_Id(
+            Long userId,
+            Long sessionId
+    );
 
+    boolean existsByUser_IdAndSession_Id(
+            Long userId,
+            Long sessionId
+    );
 
+    boolean existsByUser_IdAndSession_IdAndBookingStatus(
+            Long userId,
+            Long sessionId,
+            BookingStatus bookingStatus
+    );
+
+    // ---------- ADMIN ----------
     @Query("""
-    SELECT new com.divinespark.dto.AdminSessionUserResponse(
-        u.id,
-        u.email,
-        b.status,
-        u.username,
-        u.contactNumber
-    )
-    FROM Booking b
-    JOIN b.user u
-    WHERE b.session.id = :sessionId
-""")
+        SELECT new com.divinespark.dto.AdminSessionUserResponse(
+            u.id,
+            u.email,
+            b.bookingStatus,
+            u.username,
+            u.contactNumber
+        )
+        FROM Booking b
+        JOIN b.user u
+        WHERE b.session.id = :sessionId
+    """)
     List<AdminSessionUserResponse> findUsersBySessionId(
             @Param("sessionId") Long sessionId
     );
 
-
     @Query("""
-    SELECT new com.divinespark.dto.AdminSessionBookingResponse(
-        b.id,
-        u.id,
-        u.username,
-        u.contactNumber,
-        u.email,
-        b.status,
-        b.createdAt
-    )
-    FROM Booking b
-    JOIN b.user u
-    WHERE b.session.id = :sessionId
-""")
+        SELECT new com.divinespark.dto.AdminSessionBookingResponse(
+            b.id,
+            u.id,
+            u.username,
+            u.contactNumber,
+            u.email,
+            b.bookingStatus,
+            b.createdAt
+        )
+        FROM Booking b
+        JOIN b.user u
+        WHERE b.session.id = :sessionId
+    """)
     List<AdminSessionBookingResponse> findBookingsBySessionId(
             @Param("sessionId") Long sessionId
     );
 
-    Optional<Booking> findByUserIdAndSessionIdAndStatus(
-            Long userId,
-            Long sessionId,
-            String status
+    List<Booking> findByBookingStatusAndCreatedAtBefore(
+            BookingStatus status,
+            OffsetDateTime cutoffTime
     );
-
-    List<Booking> findByStatusAndCreatedAtBefore(
-            String status,
-            LocalDateTime cutoffTime
-    );
-
 
     boolean existsByUserIdAndSessionId(Long userId, Long sessionId);
-
-    boolean existsByUserIdAndSessionIdAndStatusNot(
-            Long userId,
-            Long sessionId,
-            String status
-    );
-
-
-
 }

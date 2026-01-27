@@ -67,6 +67,22 @@ public class UserController {
         );
     }
 
+    @PreAuthorize("hasRole('USER')")
+    @PostMapping("/sessions/{sessionId}/pay/installments")
+    public ResponseEntity<InstallmentPaymentInitiateResponse> payInInstallments(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+
+        InstallmentPaymentInitiateResponse response =
+                sessionService.initiateInstallmentPayment(
+                        sessionId,
+                        userDetails.getId()
+                );
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/profile")
     public ResponseEntity<UserProfileResponse> getMyProfile(
             @AuthenticationPrincipal CustomUserDetails userDetails) {

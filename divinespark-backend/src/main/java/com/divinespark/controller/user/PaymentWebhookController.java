@@ -44,6 +44,8 @@ public class PaymentWebhookController {
             @RequestBody String payload,
             @RequestHeader("X-Razorpay-Signature") String signature) {
 
+        System.out.println("🔥🔥 RAZORPAY WEBHOOK HIT 🔥🔥");
+
         try {
             razorpaySignatureUtil.verify(payload, signature, webhookSecret);
         } catch (Exception e) {
