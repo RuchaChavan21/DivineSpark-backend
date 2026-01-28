@@ -81,4 +81,25 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     );
 
     boolean existsByUserIdAndSessionId(Long userId, Long sessionId);
+
+
+    @Query("""
+SELECT b FROM Booking b
+JOIN FETCH b.user
+JOIN FETCH b.session
+WHERE b.session.id = :sessionId
+""")
+    List<Booking> findDetailedBookingsBySessionId(
+            @Param("sessionId") Long sessionId
+    );
+    @Query("""
+    SELECT b FROM Booking b
+    JOIN FETCH b.user
+    WHERE b.session.id = :sessionId
+""")
+    List<Booking> findBookingEntitiesBySessionId(
+            @Param("sessionId") Long sessionId
+    );
+
+
 }
