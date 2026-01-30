@@ -2,8 +2,7 @@ package com.divinespark.service.impl;
 
 import com.divinespark.dto.*;
 import com.divinespark.entity.*;
-import com.divinespark.entity.enums.SessionStatus;
-import com.divinespark.entity.enums.SessionType;
+import com.divinespark.entity.enums.*;
 import com.divinespark.exception.BusinessException;
 import com.divinespark.repository.*;
 import com.divinespark.service.*;
@@ -15,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -29,6 +29,7 @@ public class SessionServiceImpl implements SessionService {
     private final PaymentRepository paymentRepository;
     private final SessionRepository sessionRepository;
     private final RazorpayService razorpayService;
+    private final InstallmentRepository installmentRepository;
 
     public SessionServiceImpl(
             SessionRepository repo,
@@ -36,7 +37,8 @@ public class SessionServiceImpl implements SessionService {
             UserRepository userRepo,
             PaymentRepository paymentRepository,
             SessionRepository sessionRepository,
-            RazorpayService razorpayService) {
+            RazorpayService razorpayService,
+            InstallmentRepository installmentRepository) {
 
         this.repo = repo;
         this.bookingRepository = bookingRepository;
@@ -44,6 +46,7 @@ public class SessionServiceImpl implements SessionService {
         this.paymentRepository = paymentRepository;
         this.sessionRepository = sessionRepository;
         this.razorpayService = razorpayService;
+        this.installmentRepository = installmentRepository;
     }
 
     // ================= ADMIN =================
@@ -165,11 +168,13 @@ public class SessionServiceImpl implements SessionService {
         Booking booking = new Booking();
         booking.setSession(session);
         booking.setUser(user);
-        booking.setStatus("CONFIRMED");
-        bookingRepository.save(booking);
+        booking.setPaymentType(PaymentType.FREE);
+        booking.setBookingStatus(BookingStatus.CONFIRMED);
 
+        bookingRepository.save(booking);
         session.getAvailableSeats().decrementAndGet();
     }
+
 
     @Override
     public PaymentInitiateResponse initiatePaidSession(Long sessionId, Long userId) {
@@ -187,33 +192,122 @@ public class SessionServiceImpl implements SessionService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         Booking booking = bookingRepository
-                .findByUserIdAndSessionIdAndStatus(userId, sessionId, "PENDING")
+                .findByUser_IdAndSession_Id(userId, sessionId)
                 .orElseGet(() -> {
                     Booking b = new Booking();
                     b.setSession(session);
                     b.setUser(user);
-                    b.setStatus("PENDING");
-                    return bookingRepository.save(b);
+                    b.setPaymentType(PaymentType.FULL);
+                    b.setBookingStatus(BookingStatus.PENDING);
+                    bookingRepository.save(b);
+                    session.getAvailableSeats().decrementAndGet();
+                    return b;
                 });
 
+        // BLOCK DUPLICATE PAYMENTS
+        if (booking.getBookingStatus() == BookingStatus.CONFIRMED) {
+            throw new BusinessException("Session already paid");
+        }
+
         RazorpayOrderResponse order =
-                razorpayService.createOrder(session.getPrice(), booking.getId());
+                razorpayService.createOrder(
+                        (int) Math.round(session.getPrice() * 100),
+                        booking.getId()
+                );
 
         Payment payment = new Payment();
         payment.setBookingId(booking.getId());
         payment.setAmount(session.getPrice());
         payment.setGatewayOrderId(order.getOrderId());
         payment.setStatus("CREATED");
+
         paymentRepository.save(payment);
 
         PaymentInitiateResponse res = new PaymentInitiateResponse();
         res.setBookingId(booking.getId());
         res.setOrderId(order.getOrderId());
-        res.setAmount(session.getPrice() * 100);
+        res.setAmount((int) Math.round(session.getPrice()));
         res.setCurrency("INR");
 
         return res;
     }
+
+
+
+    @Override
+    @Transactional
+    public InstallmentPaymentInitiateResponse initiateInstallmentPayment(
+            Long sessionId,
+            Long userId
+    ) {
+
+        Session session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+
+        if (session.getType() != SessionType.PAID) {
+            throw new RuntimeException("Not a paid session");
+        }
+
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Create booking
+        Booking booking = new Booking();
+        booking.setUser(user);
+        booking.setSession(session);
+        booking.setPaymentType(PaymentType.INSTALLMENT);
+        booking.setTotalAmount(session.getPrice());
+        booking.setPaidAmount(0.0);
+        booking.setRemainingAmount(session.getPrice());
+        booking.setBookingStatus(BookingStatus.PENDING);
+        booking.setWhatsappLink(session.getWhatsLink());
+
+        bookingRepository.save(booking);
+        session.getAvailableSeats().decrementAndGet();
+
+        // Create installments (3 parts)
+        double installmentAmount = session.getPrice() / 3.0;
+
+        List<Installment> installments = new ArrayList<>();
+
+        for (int i = 1; i <= 3; i++) {
+            Installment inst = new Installment();
+            inst.setBooking(booking);
+            inst.setInstallmentNumber(i);
+            inst.setAmount(installmentAmount);
+            inst.setDueDate(OffsetDateTime.now().plusMonths(i - 1));
+            inst.setStatus(InstallmentStatus.PENDING);
+            installments.add(inst);
+        }
+
+        installmentRepository.saveAll(installments);
+
+        // First installment ONLY
+        Installment firstInstallment = installments.get(0);
+
+        // Charge ONLY installment amount
+        RazorpayOrderResponse order =
+                razorpayService.createOrder(
+                        (int) Math.round(firstInstallment.getAmount() * 100),
+                        booking.getId()
+                );
+
+        firstInstallment.setRazorpayOrderId(order.getOrderId());
+        installmentRepository.save(firstInstallment);
+
+        // Response
+        InstallmentPaymentInitiateResponse res =
+                new InstallmentPaymentInitiateResponse();
+
+        res.setBookingId(booking.getId());
+        res.setInstallmentId(firstInstallment.getId());
+        res.setRazorpayOrderId(order.getOrderId());
+        res.setAmount((int) Math.round(firstInstallment.getAmount() * 100));
+
+        return res;
+    }
+
+
 
     @Override
     public List<AdminSessionUserResponse> getUsersBySession(Long sessionId) {
@@ -309,30 +403,23 @@ public class SessionServiceImpl implements SessionService {
     @Override
     public String getWhatsappLinkIfConfirmed(Long sessionId, Long userId) {
 
-        // 1. Fetch CONFIRMED booking for user + session
         Booking booking = bookingRepository
-                .findByUserIdAndSessionIdAndStatus(
-                        userId,
-                        sessionId,
-                        "CONFIRMED"
-                )
-                .orElseThrow(() -> new ExpressionException(
-                        "You are not allowed to access this session"
-                ));
+                .findByUser_IdAndSession_Id(userId, sessionId)
+                .orElseThrow(() -> new ExpressionException("Access denied"));
 
-        // 2. Fetch session from booking (already mapped)
-        String whatsappLink = booking
-                .getSession()
-                .getWhatsLink();
-
-        // 3. Safety check (admin forgot to add link)
-        if (whatsappLink == null || whatsappLink.isBlank()) {
-            throw new IllegalStateException(
-                    "WhatsApp group link not configured for this session"
-            );
+        if (
+                booking.getBookingStatus() != BookingStatus.CONFIRMED &&
+                        booking.getBookingStatus() != BookingStatus.PARTIALLY_PAID
+        ) {
+            throw new ExpressionException("Access denied");
         }
 
-        // 4. Return link
+        String whatsappLink = booking.getSession().getWhatsLink();
+
+        if (whatsappLink == null || whatsappLink.isBlank()) {
+            throw new IllegalStateException("WhatsApp link not configured");
+        }
+
         return whatsappLink;
     }
 

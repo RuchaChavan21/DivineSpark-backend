@@ -50,27 +50,43 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/api/v1/auth/**",
                                 "/api/v1/payments/webhook",
-                                "/api/v1/user/**",
-                                "api/v1/public/**"
+                                "/api/v1/public/**",
+                                "/api/v1/blogs/**",
+                                "/api/v1/user/review/**"
                         ).permitAll()
 
+                        // User APIs
+                        .requestMatchers("/api/v1/user/**", "/api/v1/installments/**, ", "/api/v1/payments").hasRole("USER")
+
                         // Public session browsing
-                        .requestMatchers(HttpMethod.GET, "/api/v1/sessions/**", "/api/v1/admin/thumbnail/").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/sessions/**").permitAll()
 
-                        // Protected session actions
-                        .requestMatchers(HttpMethod.POST, "/api/v1/sessions/**").hasRole("USER")
-
-                        // Admin
+                        // Admin APIs
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()
                 )
 
+                // THIS PREVENTS GOOGLE REDIRECTS
+//                .exceptionHandling(ex -> ex
+//                        .authenticationEntryPoint((request, response, authException) -> {
+//                            response.setStatus(401);
+//                            response.setContentType("application/json");
+//                            response.getWriter().write("""
+//                    {
+//                      "error": "Unauthorized",
+//                      "message": "JWT token missing or invalid"
+//                    }
+//                """);
+//                        })
+//                )
 
-                .oauth2Login(oauth -> oauth
-                        .successHandler(oAuth2SuccessHandler)
+                // OAuth ONLY for browser login
+                .oauth2Login(oauth ->
+                        oauth.successHandler(oAuth2SuccessHandler)
                 )
 
+                // JWT filter
                 .addFilterBefore(
                         jwtAuthFilter,
                         UsernamePasswordAuthenticationFilter.class
@@ -78,6 +94,7 @@ public class SecurityConfig {
 
         return http.build();
     }
+
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

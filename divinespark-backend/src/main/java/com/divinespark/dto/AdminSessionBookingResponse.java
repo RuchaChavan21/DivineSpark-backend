@@ -1,6 +1,8 @@
 package com.divinespark.dto;
 
-import java.time.LocalDateTime;
+import com.divinespark.entity.enums.BookingStatus;
+
+import java.time.OffsetDateTime;
 
 public class AdminSessionBookingResponse {
 
@@ -9,8 +11,8 @@ public class AdminSessionBookingResponse {
     private String email;
     private String username;
     private String phoneNumber;
-    private String bookingStatus;
-    private LocalDateTime bookedAt;
+    private BookingStatus bookingStatus;
+    private OffsetDateTime bookedAt;
 
     public AdminSessionBookingResponse(
             Long bookingId,
@@ -18,8 +20,8 @@ public class AdminSessionBookingResponse {
             String username,
             String phoneNumber,
             String email,
-            String bookingStatus,
-            LocalDateTime bookedAt) {
+            BookingStatus bookingStatus,
+            OffsetDateTime bookedAt) {
 
         this.bookingId = bookingId;
         this.userId = userId;
@@ -30,12 +32,15 @@ public class AdminSessionBookingResponse {
         this.bookedAt = bookedAt;
     }
 
+
+
+
     public Long getBookingId() { return bookingId; }
     public Long getUserId() { return userId; }
     public String getEmail() { return email; }
     public String getUsername() { return username; }
-    public String getBookingStatus() { return bookingStatus; }
-    public LocalDateTime getBookedAt() { return bookedAt; }
+    public BookingStatus getBookingStatus() { return bookingStatus; }
+    public OffsetDateTime getBookedAt() { return bookedAt; }
     public String getPhoneNumber() { return phoneNumber; }
 
 }

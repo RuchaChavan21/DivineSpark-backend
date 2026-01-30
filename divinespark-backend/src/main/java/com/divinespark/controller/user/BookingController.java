@@ -2,10 +2,13 @@ package com.divinespark.controller.user;
 
 import com.divinespark.dto.ReviewCreateRequest;
 import com.divinespark.dto.UserBookingResponse;
+import com.divinespark.dto.UserSessionBookingResponse;
+import com.divinespark.entity.Booking;
 import com.divinespark.security.CustomUserDetails;
 import com.divinespark.service.BookingService;
 import com.divinespark.service.ReviewService;
 import com.divinespark.service.UserService;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -48,6 +51,24 @@ public class BookingController {
 
         return ResponseEntity.noContent().build();
     }
+
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/session/{sessionId}/me")
+    public ResponseEntity<UserSessionBookingResponse> getMyBookingForSession(
+            @PathVariable Long sessionId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return ResponseEntity.ok(
+                bookingService.getMyBookingForSession(
+                        userDetails.getId(),
+                        sessionId
+                )
+        );
+    }
+
+
+
+
 
 
 }
