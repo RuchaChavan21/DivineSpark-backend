@@ -139,7 +139,7 @@ public class BookingServiceImpl implements BookingService {
     ) {
 
         Booking booking = bookingRepository
-                .findByUser_IdAndSession_Id(userId, sessionId)
+                .findByUserIdAndSessionId(userId, sessionId)
                 .orElseThrow(() -> new RuntimeException("No booking found"));
 
         return new UserSessionBookingResponse(

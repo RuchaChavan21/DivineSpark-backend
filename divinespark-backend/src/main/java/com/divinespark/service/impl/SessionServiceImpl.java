@@ -192,7 +192,7 @@ public class SessionServiceImpl implements SessionService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         Booking booking = bookingRepository
-                .findByUser_IdAndSession_Id(userId, sessionId)
+                .findByUserIdAndSessionId(userId, sessionId)
                 .orElseGet(() -> {
                     Booking b = new Booking();
                     b.setSession(session);
@@ -422,8 +422,16 @@ public class SessionServiceImpl implements SessionService {
     public String getWhatsappLinkIfConfirmed(Long sessionId, Long userId) {
 
         Booking booking = bookingRepository
-                .findByUser_IdAndSession_Id(userId, sessionId)
+                .findFirstByUser_IdAndSession_IdAndBookingStatusInOrderByCreatedAtDesc(
+                        userId,
+                        sessionId,
+                        List.of(
+                                BookingStatus.CONFIRMED,
+                                BookingStatus.PARTIALLY_PAID
+                        )
+                )
                 .orElseThrow(() -> new ExpressionException("Access denied"));
+
 
         if (
                 booking.getBookingStatus() != BookingStatus.CONFIRMED &&
