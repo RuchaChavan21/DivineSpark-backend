@@ -248,6 +248,24 @@ public class SessionServiceImpl implements SessionService {
             throw new RuntimeException("Not a paid session");
         }
 
+        boolean alreadyActiveBooking =
+                bookingRepository.existsByUserIdAndSessionIdAndBookingStatusIn(
+                        userId,
+                        sessionId,
+                        List.of(
+                                BookingStatus.PENDING,
+                                BookingStatus.CONFIRMED,
+                                BookingStatus.PARTIALLY_PAID
+                        )
+                );
+
+        if (alreadyActiveBooking) {
+            throw new BusinessException(
+                    "You already have an active booking for this session"
+            );
+        }
+
+
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 

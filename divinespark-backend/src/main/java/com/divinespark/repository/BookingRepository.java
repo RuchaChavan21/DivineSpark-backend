@@ -101,5 +101,11 @@ WHERE b.session.id = :sessionId
             @Param("sessionId") Long sessionId
     );
 
+    boolean existsByUserIdAndSessionIdAndBookingStatusIn(
+            Long userId,
+            Long sessionId,
+            List<BookingStatus> statuses
+    );
+
 
 }
