@@ -37,5 +37,9 @@ public interface InstallmentRepository extends JpaRepository<Installment, Long> 
             @Param("orderId") String orderId
     );
 
+    @Modifying
+    @Query("delete from Installment i where i.booking.id = :bookingId")
+    void deleteByBookingId(@Param("bookingId") Long bookingId);
+
 
 }

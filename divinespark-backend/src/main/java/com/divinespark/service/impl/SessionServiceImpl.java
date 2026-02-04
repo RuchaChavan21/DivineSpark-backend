@@ -248,28 +248,29 @@ public class SessionServiceImpl implements SessionService {
             throw new RuntimeException("Not a paid session");
         }
 
-        boolean alreadyActiveBooking =
+        if (session.getAvailableSeats().get() <= 0) {
+            throw new BusinessException("No seats available");
+        }
+
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        //  block only real bookings
+        boolean alreadyBooked =
                 bookingRepository.existsByUserIdAndSessionIdAndBookingStatusIn(
                         userId,
                         sessionId,
                         List.of(
-                                BookingStatus.PENDING,
                                 BookingStatus.CONFIRMED,
                                 BookingStatus.PARTIALLY_PAID
                         )
                 );
 
-        if (alreadyActiveBooking) {
-            throw new BusinessException(
-                    "You already have an active booking for this session"
-            );
+        if (alreadyBooked) {
+            throw new BusinessException("You already booked this session");
         }
 
-
-        User user = userRepo.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // Create booking
+        //  Create booking (PENDING)
         Booking booking = new Booking();
         booking.setUser(user);
         booking.setSession(session);
@@ -281,12 +282,11 @@ public class SessionServiceImpl implements SessionService {
         booking.setWhatsappLink(session.getWhatsLink());
 
         bookingRepository.save(booking);
-        session.getAvailableSeats().decrementAndGet();
 
-        // Create installments (3 parts)
+        //  Create installments
         double installmentAmount = session.getPrice() / 3.0;
 
-        List<Installment> installments = new ArrayList<>();
+        Installment firstInstallment = null;
 
         for (int i = 1; i <= 3; i++) {
             Installment inst = new Installment();
@@ -295,35 +295,42 @@ public class SessionServiceImpl implements SessionService {
             inst.setAmount(installmentAmount);
             inst.setDueDate(OffsetDateTime.now().plusMonths(i - 1));
             inst.setStatus(InstallmentStatus.PENDING);
-            installments.add(inst);
+            installmentRepository.save(inst);
+
+            if (i == 1) firstInstallment = inst;
         }
 
-        installmentRepository.saveAll(installments);
+        //  Create Razorpay order for FIRST installment
+        int amountInPaise = (int) Math.round(installmentAmount * 100);
 
-        // First installment ONLY
-        Installment firstInstallment = installments.get(0);
-
-        // Charge ONLY installment amount
         RazorpayOrderResponse order =
-                razorpayService.createOrder(
-                        (int) Math.round(firstInstallment.getAmount() * 100),
-                        booking.getId()
-                );
+                razorpayService.createOrder(amountInPaise, booking.getId());
 
         firstInstallment.setRazorpayOrderId(order.getOrderId());
         installmentRepository.save(firstInstallment);
 
-        // Response
+        //  Create payment (bookingId REQUIRED)
+        Payment payment = new Payment();
+        payment.setBookingId(booking.getId());
+        payment.setAmount(installmentAmount);
+        payment.setGatewayOrderId(order.getOrderId());
+        payment.setStatus("CREATED");
+        paymentRepository.save(payment);
+
+        //  Seat is reserved but NOT confirmed yet
+
         InstallmentPaymentInitiateResponse res =
                 new InstallmentPaymentInitiateResponse();
 
         res.setBookingId(booking.getId());
         res.setInstallmentId(firstInstallment.getId());
         res.setRazorpayOrderId(order.getOrderId());
-        res.setAmount((int) Math.round(firstInstallment.getAmount() * 100));
+        res.setAmount(amountInPaise);
 
         return res;
     }
+
+
 
 
 
