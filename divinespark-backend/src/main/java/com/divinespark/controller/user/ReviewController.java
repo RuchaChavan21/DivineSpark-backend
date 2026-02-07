@@ -31,7 +31,6 @@ public class ReviewController {
         return ResponseEntity.ok().build();
     }
 
-    @PreAuthorize("hasRole('USER')")
     @GetMapping
     public ResponseEntity<ReviewResponse> getMyReview(
             @AuthenticationPrincipal CustomUserDetails userDetails
