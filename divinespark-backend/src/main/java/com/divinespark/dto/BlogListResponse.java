@@ -12,6 +12,16 @@ public class BlogListResponse {
     private Long id;
 
 
+    private Boolean isPublished;
+
+    public Boolean getIsPublished() {
+        return isPublished;
+    }
+    public void setIsPublished(Boolean isPublished) {
+        this.isPublished = isPublished;
+    }
+
+
     public String getAuthorName() {
         return authorName;
     }

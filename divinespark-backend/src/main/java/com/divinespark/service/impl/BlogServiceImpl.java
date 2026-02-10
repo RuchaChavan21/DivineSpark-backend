@@ -41,6 +41,7 @@ public class BlogServiceImpl implements BlogService {
         blog.setAuthorName(request.getAuthorName());
         blog.setAuthorRole(request.getAuthorRole());
         blog.setStatus(BlogStatus.DRAFT);
+        // Removed setCreatedAt and setUpdatedAt as they are handled automatically by your Entity
 
         blogRepository.save(blog);
     }
@@ -84,12 +85,17 @@ public class BlogServiceImpl implements BlogService {
 
         for (Blog b : blogs) {
             BlogListResponse dto = new BlogListResponse();
+            dto.setId(b.getId());
             dto.setTitle(b.getTitle());
             dto.setSlug(b.getSlug());
             dto.setExcerpt(b.getExcerpt());
             dto.setAuthorName(b.getAuthorName());
             dto.setAuthorRole(b.getAuthorRole());
             dto.setCreatedAt(b.getCreatedAt());
+
+            // ✅ Set published to true for this list
+            dto.setIsPublished(true);
+
             response.add(dto);
         }
 
@@ -110,18 +116,20 @@ public class BlogServiceImpl implements BlogService {
         res.setAuthorRole(blog.getAuthorRole());
         res.setCreatedAt(blog.getCreatedAt());
 
+        // ✅ Set published status
+        res.setIsPublished(true);
+
         return res;
     }
 
     // ---------- SLUG GENERATOR ----------
     private String generateSlug(String input) {
-        String slug = Normalizer.normalize(input, Normalizer.Form.NFD)
+        if (input == null) return "";
+        return Normalizer.normalize(input, Normalizer.Form.NFD)
                 .replaceAll("[^\\w\\s-]", "")
                 .trim()
                 .replaceAll("\\s+", "-")
                 .toLowerCase(Locale.ENGLISH);
-
-        return slug;
     }
 
     @Override
@@ -132,13 +140,18 @@ public class BlogServiceImpl implements BlogService {
 
         for (Blog b : blogs) {
             BlogListResponse dto = new BlogListResponse();
-            dto.setId(b.getId()); // ⭐ THIS WAS MISSING
+            dto.setId(b.getId());
             dto.setTitle(b.getTitle());
             dto.setSlug(b.getSlug());
             dto.setExcerpt(b.getExcerpt());
             dto.setAuthorName(b.getAuthorName());
             dto.setAuthorRole(b.getAuthorRole());
             dto.setCreatedAt(b.getCreatedAt());
+
+            // ✅ CRITICAL FIX: Map the status to the boolean field
+            // This ensures the frontend sees correct status!
+            dto.setIsPublished(b.getStatus() == BlogStatus.PUBLISHED);
+
             response.add(dto);
         }
 
@@ -159,8 +172,10 @@ public class BlogServiceImpl implements BlogService {
         res.setAuthorRole(blog.getAuthorRole());
         res.setCreatedAt(blog.getCreatedAt());
 
+        // ✅ CRITICAL FIX: Map the status here as well
+        res.setIsPublished(blog.getStatus() == BlogStatus.PUBLISHED);
+
         return res;
     }
-
 
 }
