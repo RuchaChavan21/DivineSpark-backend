@@ -48,7 +48,9 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/api/v1/auth/**",
                                 "/api/v1/payments/webhook",
-                                "/api/v1/public/**"
+                                "/api/v1/public/**",
+                                "/api/v1/blogs/**",
+                                "/api/v1/user/review/**"
                         ).permitAll()
 
                         // PUBLIC: session browsing & reviews (NO LOGIN)
