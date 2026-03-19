@@ -19,11 +19,10 @@ import java.time.LocalDateTime;
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final OtpRepository otpRepository;   // ✅ ADD THIS
+    private final OtpRepository otpRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
-    // ✅ UPDATE CONSTRUCTOR
     public AuthService(
             UserRepository userRepository,
             OtpRepository otpRepository,
@@ -43,7 +42,13 @@ public class AuthService {
             throw new RuntimeException("Email is already in use");
         }
 
-        if (!request.getContactNumber().matches("^[6-9]\\d{9}$")) {
+        String phone = request.getContactNumber().replaceAll("\\D", "");
+
+        if (phone.startsWith("91") && phone.length() == 12) {
+            phone = phone.substring(2);
+        }
+
+        if (!phone.matches("^[6-9]\\d{9}$")) {
             throw new RuntimeException("Invalid contact number");
         }
 
@@ -51,14 +56,13 @@ public class AuthService {
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .contactNumber(request.getContactNumber())
+                .contactNumber(phone)
                 .role(Role.USER)
                 .isActive(true)
                 .build();
 
         userRepository.save(user);
     }
-
     // ================= LOGIN =================
     public String login(LoginRequest request) {
 
