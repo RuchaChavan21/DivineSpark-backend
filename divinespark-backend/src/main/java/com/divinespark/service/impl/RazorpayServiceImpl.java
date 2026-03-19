@@ -1,178 +1,94 @@
 package com.divinespark.service.impl;
 
-import com.divinespark.dto.AdminPaymentResponse;
-import com.divinespark.entity.*;
-import com.divinespark.entity.enums.BookingStatus;
-import com.divinespark.entity.enums.InstallmentStatus;
-import com.divinespark.entity.enums.PaymentType;
-import com.divinespark.repository.BookingRepository;
-import com.divinespark.repository.InstallmentRepository;
-import com.divinespark.repository.PaymentRepository;
-import com.divinespark.service.EmailService;
-import com.divinespark.service.PaymentService;
+import com.divinespark.config.RazorpayConfig;
+import com.divinespark.dto.RazorpayOrderResponse;
+import com.divinespark.service.RazorpayService;
+import com.razorpay.Order;
+import com.razorpay.RazorpayClient;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.OffsetDateTime;
-import java.util.List;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 @Service
-public class PaymentServiceImpl implements PaymentService {
+public class RazorpayServiceImpl implements RazorpayService {
 
-    private final PaymentRepository paymentRepository;
-    private final BookingRepository bookingRepo;
-    private final EmailService emailService;
-    private final InstallmentRepository installmentRepository;
+    private final RazorpayConfig razorpayConfig;
+    @Value("${razorpay.key.secret}")
+    private String razorpaySecret;
 
-    public PaymentServiceImpl(
-            PaymentRepository paymentRepository,
-            BookingRepository bookingRepo,
-            EmailService emailService,
-            InstallmentRepository installmentRepository) {
 
-        this.paymentRepository = paymentRepository;
-        this.bookingRepo = bookingRepo;
-        this.emailService = emailService;
-        this.installmentRepository = installmentRepository;
+    public RazorpayServiceImpl(RazorpayConfig razorpayConfig) {
+        this.razorpayConfig = razorpayConfig;
     }
-
-    // ================= FAILURE HANDLING =================
-
-    @Transactional
-    public void handlePaymentFailure(String gatewayOrderId) {
-
-        Payment payment =
-                paymentRepository.findByGatewayOrderId(gatewayOrderId)
-                        .orElseThrow(() -> new RuntimeException("Payment not found"));
-
-        if (payment == null) return;
-        if ("FAILED".equals(payment.getStatus())) return;
-
-        payment.setStatus("FAILED");
-        paymentRepository.save(payment);
-
-        Booking booking = bookingRepo
-                .findById(payment.getBookingId())
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
-
-        booking.setBookingStatus(BookingStatus.CANCELLED);
-        bookingRepo.save(booking);
-    }
-
-    // ================= SUCCESS HANDLING (FULL PAYMENT) =================
-
-    @Transactional
-    public void handlePaymentSuccess(String gatewayOrderId) {
-
-        Payment payment =
-                paymentRepository.findByGatewayOrderId(gatewayOrderId)
-                        .orElseThrow(() -> new RuntimeException("Payment not found"));
-
-        if (payment == null) return;
-        if ("SUCCESS".equals(payment.getStatus())) return;
-
-        payment.setStatus("SUCCESS");
-        paymentRepository.save(payment);
-
-        Booking booking = bookingRepo
-                .findById(payment.getBookingId())
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
-
-        if (booking.getPaymentType() == PaymentType.FULL) {
-            booking.setBookingStatus(BookingStatus.CONFIRMED);
-            bookingRepo.save(booking);
-        }
-    }
-
-    // ================= ADMIN =================
 
     @Override
-    public List<AdminPaymentResponse> getAllPaymentsForAdmin() {
-        return paymentRepository.fetchAdminPayments();
+    public RazorpayOrderResponse createOrder(int amountInPaise, Long referenceId) {
+
+        try {
+            RazorpayClient client = new RazorpayClient(
+                    razorpayConfig.getKeyId(),
+                    razorpayConfig.getKeySecret()
+            );
+
+            JSONObject orderRequest = new JSONObject();
+            orderRequest.put("amount", amountInPaise); // already paise
+            orderRequest.put("currency", razorpayConfig.getCurrency());
+            orderRequest.put("receipt", "ref_" + referenceId);
+            orderRequest.put("payment_capture", 1);
+
+            Order order = client.orders.create(orderRequest);
+
+            RazorpayOrderResponse response = new RazorpayOrderResponse();
+            response.setOrderId(order.get("id"));
+
+            return response;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create Razorpay order", e);
+        }
     }
 
-    // ================= WEBHOOK (FULL + INSTALLMENT) =================
-
     @Override
-    @Transactional
-    public boolean handlePaymentCaptured(String razorpayOrderId, int amount) {
+    public boolean verifySignature(
+            String razorpayOrderId,
+            String razorpayPaymentId,
+            String razorpaySignature
+    ) {
+        try {
+            String payload = razorpayOrderId + "|" + razorpayPaymentId;
 
-        // 1️ INSTALLMENT PAYMENT (CHECK FIRST)
-        Installment installment =
-                installmentRepository.findByRazorpayOrderId(razorpayOrderId)
-                        .orElse(null);
+            Mac mac = Mac.getInstance("HmacSHA256");
+            SecretKeySpec secretKey =
+                    new SecretKeySpec(
+                            razorpaySecret.getBytes(StandardCharsets.UTF_8),
+                            "HmacSHA256"
+                    );
 
-        if (installment != null) {
+            mac.init(secretKey);
+            byte[] hash = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
 
-            if (installment.getStatus() == InstallmentStatus.PAID) {
-                return true; // idempotent
-            }
+            // 🔥 HEX encoding (NOT Base64)
+            String generatedSignature = bytesToHex(hash);
 
-            installment.setStatus(InstallmentStatus.PAID);
-            installment.setPaidAt(OffsetDateTime.now());
-            installmentRepository.save(installment);
+            return generatedSignature.equals(razorpaySignature);
 
-            Booking booking = installment.getBooking();
-
-            double paidAmount = installmentRepository
-                    .findByBooking_IdAndStatus(
-                            booking.getId(),
-                            InstallmentStatus.PAID
-                    )
-                    .stream()
-                    .mapToDouble(Installment::getAmount)
-                    .sum();
-
-            booking.setPaidAmount(paidAmount);
-            booking.setRemainingAmount(
-                    Math.max(booking.getTotalAmount() - paidAmount, 0)
-            );
-
-            booking.setBookingStatus(
-                    booking.getRemainingAmount() == 0
-                            ? BookingStatus.CONFIRMED
-                            : BookingStatus.PARTIALLY_PAID
-            );
-
-            bookingRepo.save(booking);
-
-            // Payment record (for admin / audit)
-            Payment p = new Payment();
-            p.setBookingId(booking.getId());
-            p.setAmount(installment.getAmount());
-            p.setGatewayOrderId(razorpayOrderId);
-            p.setStatus("SUCCESS");
-            paymentRepository.save(p);
-
-            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
+    }
 
-        // 2 FULL PAYMENT (CHECK AFTER)
-        Payment payment =
-                paymentRepository.findByGatewayOrderId(razorpayOrderId)
-                        .orElseThrow(() -> new RuntimeException("Payment not found"));
-
-        if (payment != null) {
-
-            if ("SUCCESS".equals(payment.getStatus())) {
-                return true;
-            }
-
-            payment.setStatus("SUCCESS");
-            paymentRepository.save(payment);
-
-            Booking booking = bookingRepo.findById(payment.getBookingId())
-                    .orElseThrow();
-
-            booking.setPaidAmount(booking.getTotalAmount());
-            booking.setRemainingAmount(0);
-            booking.setBookingStatus(BookingStatus.CONFIRMED);
-            bookingRepo.save(booking);
-
-            return true;
+    private String bytesToHex(byte[] bytes) {
+        StringBuilder hex = new StringBuilder(bytes.length * 2);
+        for (byte b : bytes) {
+            hex.append(String.format("%02x", b));
         }
-
-        return false;
+        return hex.toString();
     }
 
 
