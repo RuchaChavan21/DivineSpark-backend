@@ -6,8 +6,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -55,17 +53,27 @@ public class SecurityConfig {
                                 "/api/v1/user/review/**"
                         ).permitAll()
 
-                        // User APIs
-                        .requestMatchers("/api/v1/user/**", "/api/v1/installments/**, ", "/api/v1/payments").hasRole("USER")
+                        // PUBLIC: session browsing & reviews (NO LOGIN)
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/v1/sessions/**",
+                                "/api/v1/user/review/**",
+                                "/api/v1/blogs/**"
+                        ).permitAll()
 
-                        // Public session browsing
-                        .requestMatchers(HttpMethod.GET, "/api/v1/sessions/**").permitAll()
+                        // User APIs (LOGIN REQUIRED)
+                        .requestMatchers(
+                                "/api/v1/user/**",
+                                "/api/v1/installments/**",
+                                "/api/v1/payments/**"
+                        ).hasRole("USER")
 
                         // Admin APIs
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()
                 )
+
 
                 // THIS PREVENTS GOOGLE REDIRECTS
 //                .exceptionHandling(ex -> ex

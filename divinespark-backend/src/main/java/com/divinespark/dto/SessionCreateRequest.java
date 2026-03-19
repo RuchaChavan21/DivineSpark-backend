@@ -13,7 +13,7 @@ public class SessionCreateRequest {
     private double price;
     private String whatsappGroupLink;
 
-    // ✅ Frontend sends OffsetDateTime with +05:30
+    //  Frontend sends OffsetDateTime with +05:30
     private OffsetDateTime startTime;
     private OffsetDateTime endTime;
 

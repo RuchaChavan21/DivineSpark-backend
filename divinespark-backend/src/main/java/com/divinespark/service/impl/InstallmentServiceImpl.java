@@ -9,9 +9,11 @@ import com.divinespark.entity.Installment;
 import com.divinespark.entity.Payment;
 import com.divinespark.entity.enums.BookingStatus;
 import com.divinespark.entity.enums.InstallmentStatus;
+import com.divinespark.entity.enums.PaymentType;
 import com.divinespark.repository.BookingRepository;
 import com.divinespark.repository.InstallmentRepository;
 import com.divinespark.repository.PaymentRepository;
+import com.divinespark.repository.UserRepository;
 import com.divinespark.service.InstallementService;
 import com.divinespark.service.RazorpayService;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 
@@ -29,17 +32,20 @@ public class InstallmentServiceImpl implements InstallementService {
     private final BookingRepository bookingRepository;
     private final PaymentRepository paymentRepository;
     private final RazorpayService razorpayService;
+    private final UserRepository userRepository;
 
     public InstallmentServiceImpl(
             InstallmentRepository installmentRepository,
             BookingRepository bookingRepository,
             PaymentRepository paymentRepository,
-            RazorpayService razorpayService
+            RazorpayService razorpayService,
+            UserRepository userRepository
     ) {
         this.installmentRepository = installmentRepository;
         this.bookingRepository = bookingRepository;
         this.paymentRepository = paymentRepository;
         this.razorpayService = razorpayService;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -129,42 +135,72 @@ public class InstallmentServiceImpl implements InstallementService {
     }
 
 
-    @Transactional
-    public void markInstallmentPaid(String razorpayOrderId) {
 
+    @Override
+    @Transactional
+    public boolean verifyAndMarkInstallmentPaid(
+            String razorpayOrderId,
+            String razorpayPaymentId,
+            String razorpaySignature
+    ) {
+
+        // 1 Find installment by Razorpay order ID
         Installment installment = installmentRepository
                 .findByRazorpayOrderId(razorpayOrderId)
                 .orElseThrow(() -> new RuntimeException("Installment not found"));
 
-        if (installment.getStatus() == InstallmentStatus.PAID) {
-            return;
+        Booking booking = installment.getBooking();
+
+        // 2 Verify Razorpay signature
+        System.out.println(">>> VERIFY SERVICE CALLED <<<");
+        boolean verified = razorpayService.verifySignature(
+                razorpayOrderId,
+                razorpayPaymentId,
+                razorpaySignature
+        );
+
+        System.out.println("SIGNATURE VERIFIED = " + verified);
+
+
+        if (!verified) {
+            throw new RuntimeException("Payment verification failed");
         }
 
-        // Mark installment paid
+        // 3 Idempotency (avoid double update)
+        if (installment.getStatus() == InstallmentStatus.PAID) {
+            return true;
+        }
+
+        // 4 Mark FIRST installment as PAID
         installment.setStatus(InstallmentStatus.PAID);
         installment.setPaidAt(OffsetDateTime.now());
         installmentRepository.save(installment);
 
-        Booking booking = installment.getBooking();
-
-        // Update booking amounts
+        // 5️ Update booking amounts
         booking.setPaidAmount(
                 booking.getPaidAmount() + installment.getAmount()
         );
+
         booking.setRemainingAmount(
                 booking.getTotalAmount() - booking.getPaidAmount()
         );
 
-        // Update booking status
-        boolean allPaid = installmentRepository
-                .findByBookingIdOrderByInstallmentNumber(booking.getId())
-                .stream()
-                .allMatch(i -> i.getStatus() == InstallmentStatus.PAID);
+        // 6️ Update booking status
+        booking.setBookingStatus(BookingStatus.PARTIALLY_PAID);
+        bookingRepository.save(booking);
 
-        booking.setBookingStatus(
-                allPaid ? BookingStatus.CONFIRMED : BookingStatus.PARTIALLY_PAID
-        );
+        // 7️ Update payment record
+        paymentRepository.findByGatewayOrderId(razorpayOrderId)
+                .ifPresent(p -> {
+                    p.setStatus("SUCCESS");
+                    paymentRepository.save(p);
+                });
+
+        return true;
     }
+
+
+
 
 
 }

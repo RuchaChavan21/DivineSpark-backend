@@ -22,7 +22,7 @@ public class Event {
     @Column(nullable = false)
     private OffsetDateTime startTime;
 
-    @Column(nullable = false)
+    @Column
     private Integer durationMinutes;
     // auto-expiry logic uses this
 

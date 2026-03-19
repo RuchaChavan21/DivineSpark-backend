@@ -19,9 +19,22 @@ public class PaymentVerificationController {
 
     @PostMapping("/installment/verify")
     public ResponseEntity<Void> verifyInstallment(
-            @RequestParam String razorpayOrderId
+            @RequestParam String razorpayOrderId,
+            @RequestParam String razorpayPaymentId,
+            @RequestParam String razorpaySignature
     ) {
-        installmentService.markInstallmentPaid(razorpayOrderId);
+        System.out.println(">>> VERIFY API HIT <<<");
+        System.out.println("orderId = " + razorpayOrderId);
+        System.out.println("paymentId = " + razorpayPaymentId);
+        System.out.println("signature = " + razorpaySignature);
+
+        installmentService.verifyAndMarkInstallmentPaid(
+                razorpayOrderId,
+                razorpayPaymentId,
+                razorpaySignature
+        );
+
         return ResponseEntity.ok().build();
     }
+
 }

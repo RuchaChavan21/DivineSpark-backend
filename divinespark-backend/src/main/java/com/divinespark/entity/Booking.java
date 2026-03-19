@@ -7,8 +7,7 @@ import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "bookings",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "session_id"}))
+@Table(name = "bookings")
 public class Booking {
 
     @Id

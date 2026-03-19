@@ -42,7 +42,8 @@ public class PaymentServiceImpl implements PaymentService {
     public void handlePaymentFailure(String gatewayOrderId) {
 
         Payment payment =
-                paymentRepository.findByGatewayOrderId(gatewayOrderId);
+                paymentRepository.findByGatewayOrderId(gatewayOrderId)
+                        .orElseThrow(() -> new RuntimeException("Payment not found"));
 
         if (payment == null) return;
         if ("FAILED".equals(payment.getStatus())) return;
@@ -64,7 +65,8 @@ public class PaymentServiceImpl implements PaymentService {
     public void handlePaymentSuccess(String gatewayOrderId) {
 
         Payment payment =
-                paymentRepository.findByGatewayOrderId(gatewayOrderId);
+                paymentRepository.findByGatewayOrderId(gatewayOrderId)
+                        .orElseThrow(() -> new RuntimeException("Payment not found"));
 
         if (payment == null) return;
         if ("SUCCESS".equals(payment.getStatus())) return;
@@ -95,7 +97,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     public boolean handlePaymentCaptured(String razorpayOrderId, int amount) {
 
-        // 1️⃣ INSTALLMENT PAYMENT (CHECK FIRST)
+        // 1️ INSTALLMENT PAYMENT (CHECK FIRST)
         Installment installment =
                 installmentRepository.findByRazorpayOrderId(razorpayOrderId)
                         .orElse(null);
@@ -145,9 +147,10 @@ public class PaymentServiceImpl implements PaymentService {
             return true;
         }
 
-        // 2️⃣ FULL PAYMENT (CHECK AFTER)
+        // 2 FULL PAYMENT (CHECK AFTER)
         Payment payment =
-                paymentRepository.findByGatewayOrderId(razorpayOrderId);
+                paymentRepository.findByGatewayOrderId(razorpayOrderId)
+                        .orElseThrow(() -> new RuntimeException("Payment not found"));
 
         if (payment != null) {
 

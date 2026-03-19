@@ -10,6 +10,16 @@ public class BlogDetailResponse {
     private String authorRole;
     private OffsetDateTime createdAt;
 
+
+    private Boolean isPublished;
+
+    public Boolean getIsPublished() {
+        return isPublished;
+    }
+    public void setIsPublished(Boolean isPublished) {
+        this.isPublished = isPublished;
+    }
+
     public String getTitle() {
         return title;
     }

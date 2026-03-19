@@ -24,21 +24,17 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     """)
     List<Booking> findUserBookingsWithSession(Long userId);
 
-    Optional<Booking> findByUser_IdAndSession_Id(
-            Long userId,
-            Long sessionId
-    );
+    Optional<Booking> findByUserIdAndSessionId(Long userId, Long sessionId);
 
-    boolean existsByUser_IdAndSession_Id(
-            Long userId,
-            Long sessionId
-    );
 
-    boolean existsByUser_IdAndSession_IdAndBookingStatus(
+    Optional<Booking> findFirstByUser_IdAndSession_IdAndBookingStatusInOrderByCreatedAtDesc(
             Long userId,
             Long sessionId,
-            BookingStatus bookingStatus
+            List<BookingStatus> statuses
     );
+
+
+
 
     // ---------- ADMIN ----------
     @Query("""
@@ -100,6 +96,13 @@ WHERE b.session.id = :sessionId
     List<Booking> findBookingEntitiesBySessionId(
             @Param("sessionId") Long sessionId
     );
+
+    boolean existsByUserIdAndSessionIdAndBookingStatusIn(
+            Long userId,
+            Long sessionId,
+            List<BookingStatus> statuses
+    );
+
 
 
 }
