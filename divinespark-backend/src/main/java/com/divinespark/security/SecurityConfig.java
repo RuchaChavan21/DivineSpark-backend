@@ -53,21 +53,27 @@ public class SecurityConfig {
                                 "/api/v1/user/review/**"
                         ).permitAll()
 
-                        // User APIs
+                        // PUBLIC: session browsing & reviews (NO LOGIN)
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/v1/sessions/**",
+                                "/api/v1/user/review/**",
+                                "/api/v1/blogs/**"
+                        ).permitAll()
+
+                        // User APIs (LOGIN REQUIRED)
                         .requestMatchers(
                                 "/api/v1/user/**",
                                 "/api/v1/installments/**",
                                 "/api/v1/payments/**"
                         ).hasRole("USER")
 
-                        // Public session browsing
-                        .requestMatchers(HttpMethod.GET, "/api/v1/sessions/**").permitAll()
-
                         // Admin APIs
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()
                 )
+
 
                 // THIS PREVENTS GOOGLE REDIRECTS
 //                .exceptionHandling(ex -> ex
