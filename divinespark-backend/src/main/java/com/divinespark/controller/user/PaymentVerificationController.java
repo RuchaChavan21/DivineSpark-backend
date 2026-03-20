@@ -37,6 +37,4 @@ public class PaymentVerificationController {
         return ResponseEntity.ok().build();
     }
 
-
-
 }
