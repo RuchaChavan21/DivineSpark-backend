@@ -75,19 +75,18 @@ public class SecurityConfig {
                 )
 
 
-                // THIS PREVENTS GOOGLE REDIRECTS
-//                .exceptionHandling(ex -> ex
-//                        .authenticationEntryPoint((request, response, authException) -> {
-//                            response.setStatus(401);
-//                            response.setContentType("application/json");
-//                            response.getWriter().write("""
-//                    {
-//                      "error": "Unauthorized",
-//                      "message": "JWT token missing or invalid"
-//                    }
-//                """);
-//                        })
-//                )
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(401);
+                            response.setContentType("application/json");
+                            response.getWriter().write("""
+                    {
+                      "error": "Unauthorized",
+                      "message": "JWT token missing or invalid"
+                    }
+                """);
+                        })
+                )
 
                 // OAuth ONLY for browser login
                 .oauth2Login(oauth ->
