@@ -113,7 +113,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        String path = request.getServletPath();
+        String path = request.getRequestURI();
 
         // Skip JWT for public endpoints
         if (isPublicEndpoint(path)) {
@@ -166,14 +166,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    //Define PUBLIC APIs here
     private boolean isPublicEndpoint(String path) {
-        return path.startsWith("/api/v1/auth")
-                || path.startsWith("/api/v1/sessions")
-                || path.startsWith("/api/v1/blogs")
-                || path.startsWith("/api/v1/public")
-                || path.startsWith("/api/v1/user/review")
-                || path.startsWith("/v3/api-docs")
-                || path.startsWith("/swagger-ui");
-    }
+
+    return path.startsWith("/api/v1/auth/")
+            || path.equals("/api/v1/auth")
+
+            || path.startsWith("/api/v1/sessions/")
+            || path.equals("/api/v1/sessions")
+
+            || path.startsWith("/api/v1/blogs/")
+            || path.startsWith("/api/v1/public/")
+            || path.startsWith("/api/v1/user/review/")
+
+            || path.startsWith("/v3/api-docs")
+            || path.startsWith("/swagger-ui");
+}
 }
