@@ -42,3 +42,4 @@ src/main/resources/application-*.properties
 *.env
 
 notepad .gitignore
+app.log

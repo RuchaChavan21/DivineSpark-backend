@@ -55,7 +55,6 @@ public class SecurityConfig {
 
                         // PUBLIC: session browsing & reviews (NO LOGIN)
                         .requestMatchers(
-                                HttpMethod.GET,
                                 "/api/v1/sessions/**",
                                 "/api/v1/user/review/**",
                                 "/api/v1/blogs/**"
