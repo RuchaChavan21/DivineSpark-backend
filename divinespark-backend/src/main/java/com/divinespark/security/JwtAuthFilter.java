@@ -113,26 +113,22 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        String path = request.getRequestURI();
-
-        // Skip JWT for public endpoints
-        if (isPublicEndpoint(path)) {
+        if (isPublicEndpoint(request)) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String authHeader = request.getHeader("Authorization");
 
-        // If no token → just continue (DON'T block)
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
+
             String token = authHeader.substring(7);
 
-            // Validate token safely
             if (jwtUtil.validateToken(token)) {
 
                 String email = jwtUtil.extractEmail(token);
@@ -141,44 +137,50 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         (CustomUserDetails) userDetailsService
                                 .loadUserByUsername(email);
 
-                UsernamePasswordAuthenticationToken authentication =
+                UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(
                                 userDetails,
                                 null,
                                 userDetails.getAuthorities()
                         );
 
-                authentication.setDetails(
+                authToken.setDetails(
                         new WebAuthenticationDetailsSource()
                                 .buildDetails(request)
                 );
 
                 SecurityContextHolder.getContext()
-                        .setAuthentication(authentication);
+                        .setAuthentication(authToken);
             }
 
         } catch (Exception e) {
-            // DO NOT BLOCK request if token is bad
-            System.out.println("JWT Error: " + e.getMessage());
+            System.out.println("JWT error: " + e.getMessage());
         }
 
-        // Always continue
         filterChain.doFilter(request, response);
     }
 
-    private boolean isPublicEndpoint(String path) {
+    private boolean isPublicEndpoint(HttpServletRequest request) {
 
-    return path.startsWith("/api/v1/auth/")
-            || path.equals("/api/v1/auth")
+        String path = request.getRequestURI();
+        String method = request.getMethod();
 
-            || path.startsWith("/api/v1/sessions/")
-            || path.equals("/api/v1/sessions")
+        // allow preflight requests
+        if ("OPTIONS".equalsIgnoreCase(method)) {
+            return true;
+        }
 
-            || path.startsWith("/api/v1/blogs/")
-            || path.startsWith("/api/v1/public/")
-            || path.startsWith("/api/v1/user/review/")
+        return path.startsWith("/api/v1/auth/")
+                || path.equals("/api/v1/auth")
 
-            || path.startsWith("/v3/api-docs")
-            || path.startsWith("/swagger-ui");
-}
+                || path.startsWith("/api/v1/sessions/")
+                || path.equals("/api/v1/sessions")
+
+                || path.startsWith("/api/v1/blogs/")
+                || path.startsWith("/api/v1/public/")
+                || path.startsWith("/api/v1/user/review/")
+
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/swagger-ui");
+    }
 }

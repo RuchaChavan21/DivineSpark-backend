@@ -1,5 +1,6 @@
 package com.divinespark.security;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -76,14 +77,22 @@ public class SecurityConfig {
 
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) -> {
-                            response.setStatus(401);
-                            response.setContentType("application/json");
-                            response.getWriter().write("""
-                    {
-                      "error": "Unauthorized",
-                      "message": "JWT token missing or invalid"
-                    }
-                """);
+
+                            String path = request.getRequestURI();
+
+                            // Only return 401 for protected APIs
+                            if (!path.startsWith("/api/v1/auth")) {
+
+                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                response.setContentType("application/json");
+
+                                response.getWriter().write("""
+            {
+              "error": "Unauthorized",
+              "message": "JWT token missing or invalid"
+            }
+            """);
+                            }
                         })
                 )
 
