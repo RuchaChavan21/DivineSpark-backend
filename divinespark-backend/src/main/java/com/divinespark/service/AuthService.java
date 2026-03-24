@@ -39,7 +39,7 @@ public class AuthService {
     public void register(RegisterRequest request) {
 
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("Email is already in use");
+            throw new IllegalStateException("Email is already in use");
         }
 
         String phone = request.getContactNumber().replaceAll("\\D", "");
